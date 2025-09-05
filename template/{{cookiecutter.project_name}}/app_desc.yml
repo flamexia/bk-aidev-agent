@@ -42,6 +42,21 @@ modules:
           - name: DJANGO_ALLOW_ASYNC_UNSAFE
             value: "True"
             description: set django allow unsafe async
+          - name: S_TOKEN
+            value: S_TOKEN
+            description: S_TOKEN
+          - name: S_ENCODING_AES_KEY
+            value: S_ENCODING_AES_KEY
+            description: S_ENCODING_AES_KEY
+          - name: DEBUG
+            value: "False"
+            description: DEBUG
+          - name: XWORK_BACKEND_API_NAME
+            value: bkchat
+            description: XWORK_BACKEND_API_NAME
+          - name: IS_INDEPENDENT_BOT
+            value: true
+            description: IS_INDEPENDENT_BOT
           {% if cookiecutter.llm_gateway_url -%}
           - name: LLM_GW_ENDPOINT
             value: "{{cookiecutter.llm_gateway_url}}"
@@ -85,5 +100,12 @@ modules:
               protocol: TCP
               exposedType:
                 name: bk/http
+              targetPort: 5000
+              port: 80
+        - name: wxbot
+          procCommand: python aidev_wxbot_plugin/manage.py runserver 0.0.0.0:5000
+          services:
+            - name: wxbot
+              protocol: TCP
               targetPort: 5000
               port: 80
