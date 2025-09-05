@@ -7,17 +7,11 @@ class BkAiDevApi:
     def __init__(self):
         self.api = BkApi("bkaidev")
 
-    def list_space(self, username):
-        pass
-
-    def get_space(self, space_id):
-        pass
-
     def list_agent(self, username):
-        pass
+        return self.api.call_action("list_agent", "GET", params={"username": username})
 
-    def get_agent(self, agent_id):
-        pass
+    def retrieve_agent(self, agent_code):
+        return self.api.call_action(f"openapi/aidev/resource/v1/agent/{agent_code}/", "GET")
 
 
 class AgentBackend:

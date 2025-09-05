@@ -1,7 +1,6 @@
 import logging
 
 import stackprinter
-from rest_framework import status
 
 logger = logging.getLogger("aidev_wxbot_plugin")
 
@@ -51,6 +50,4 @@ class ExceptionHandlerMiddleware:
             error_data.update({"debug": True, "traceback": traceback.format_exc()})
         full_stack = stackprinter.format((exception.__class__, exception, exception.__traceback__))
         logger.error(msg=full_stack)
-        return JsonResponse(
-            {"message": "系统出错，请联系管理员！", "result": False}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return JsonResponse({"message": "系统出错，请联系管理员！", "result": False}, status=500)
