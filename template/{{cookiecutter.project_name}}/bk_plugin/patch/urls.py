@@ -10,9 +10,11 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+from blueapps.account.decorators import login_exempt
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, re_path
+from django.views.decorators.csrf import csrf_exempt
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -29,6 +31,32 @@ schema_view = get_schema_view(
 )
 
 
+@login_exempt
+@csrf_exempt
+def to_wxbot_callback_path(request):
+    query_string = request.META.get("QUERY_STRING", "")
+    target_url = f"http://{settings.BK_APP_CODE}--wxbot.bkapp-{settings.BK_APP_CODE}-{settings.ENVIRONMENT}/callback"
+    if query_string:
+        target_url += f"?{query_string}"
+
+    if request.method == "GET":
+        response = requests.get(
+            target_url,
+            headers=dict(request.headers),
+            data=request.body,
+        )
+    else:
+        response = requests.post(
+            target_url,
+            headers=dict(request.headers),
+            data=request.body,
+        )
+    return HttpResponse(
+        response.content,
+        status=response.status_code,
+    )
+
+
 urlpatterns = [
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^account/", include("blueapps.account.urls")),
@@ -43,8 +71,8 @@ urlpatterns = [
     re_path(r"^$", IndexView.as_view(), name="index"),
     re_path(r"^page/$", IndexView.as_view(), name="index"),
     re_path(r"^side-slider/$", IndexView.as_view(), name="index"),
+    re_path("^wxbot_callback$", to_wxbot_callback_path),
 ]
-
 
 if settings.ENVIRONMENT == "dev":
     from bk_plugin_framework.services.debug_panel.views import debug_panel
