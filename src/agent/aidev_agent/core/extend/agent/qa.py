@@ -843,7 +843,7 @@ class CommonQAStreamingMixIn:
         # 前端渲染要求在 think 和 text 之间必须保证有 "\n\n" 的 text 内容
         if (
             cache
-            and (cache[-1].get("event") == EventType.THINK.value)
+            and (cache[-1].get("event") in (EventType.THINK.value, EventType.REFERENCE_DOC.value))
             and (ret.get("event") == EventType.TEXT.value)
             and (not ret.get("content").startswith("\n"))
         ):
@@ -969,7 +969,7 @@ class CommonQAStreamingMixIn:
                                             "content": '"action_input":',
                                             "cover": cover,
                                         }
-                                        yield self._yield_ret(ret)
+                                        self.check_and_append(cache, ret)
                                         final_result += ret["content"]
                                         first_tool_args = False
                                     ret = {
@@ -992,7 +992,7 @@ class CommonQAStreamingMixIn:
                                         "cover": False,
                                         "elapsed_time": (time.time() - agent_think_start_time) * 1000,
                                     }
-                                    yield self._yield_ret(ret)
+                                    self.check_and_append(cache, ret)
                                     final_result += ret["content"]
                                 ret = {
                                     "event": EventType.TEXT.value,
@@ -1196,8 +1196,14 @@ class CommonQAStreamingMixIn:
                                 if last_event_type == "think":
                                     first_think_event = False
                                 yield self._yield_ret(ret)
-                    else:
-                        yield self._yield_ret(ret)
+                    elif isinstance(self, ToolCallingCommonQAAgent):
+                        if ret.get("content", "") == self.LOADING_AGENT_MESSAGE:
+                            yield self._yield_ret(ret)
+                        else:
+                            self.check_and_append(cache, ret)
+                        if len(cache) == max_cache_length:
+                            ret = cache.popleft()
+                            yield self._yield_ret(ret)
 
             if isinstance(self, StructuredChatCommonQAAgent):
                 # 以下逻辑用于利用 self.end_content 标志跟 final_answer_suffix_to_filter 拼接后进行尾部去除
@@ -1226,35 +1232,35 @@ class CommonQAStreamingMixIn:
                     # 如果没 filter 到，则还是将 end_ret 剔除
                     cache.pop()
 
-                while cache:
-                    ret = cache.popleft()
-                    last_event_type = ret["event"]
-                    yield self._yield_ret(ret)
-                for think_symbol in self.think_symbols:
-                    final_result = final_result.replace(think_symbol, "")
-                # 如果 done 之前的最后一个 event 是 think 类型，则说明从 think 内容中解析结论失败，需额外发送一条 text event，
-                # 防止报错：
-                # {\"result\":false,\"data\":null,\"code\":\"1500400\",\"message\":\"content: 该字段不能为空。\"}" }
-                if last_event_type == EventType.THINK.value:
-                    # 先发一个确保带 elapsed_time 的 think ret
-                    ret = {
-                        "event": EventType.THINK.value,
-                        "content": "\n",
-                        "cover": False,
-                        "elapsed_time": (time.time() - agent_think_start_time) * 1000,
-                    }
-                    yield self._yield_ret(ret)
-                    # 再发一个确保为 text 的 ret
-                    _logger.warning(
-                        "Fail to derive the final answer from the thinking process. "
-                        f"The final result is: \n{final_result}\n"
-                    )
-                    ret = {
-                        "event": EventType.TEXT.value,
-                        "content": "抱歉，由于LLM指令遵从效果欠佳，尝试从思考内容中解析最终结论失败，请从思考内容中获取结论。",
-                        "cover": cover,
-                    }
-                    yield self._yield_ret(ret)
+            while cache:
+                ret = cache.popleft()
+                last_event_type = ret["event"]
+                yield self._yield_ret(ret)
+            for think_symbol in self.think_symbols:
+                final_result = final_result.replace(think_symbol, "")
+            # 如果 done 之前的最后一个 event 是 think 类型，则说明从 think 内容中解析结论失败，需额外发送一条 text event，
+            # 防止报错：
+            # {\"result\":false,\"data\":null,\"code\":\"1500400\",\"message\":\"content: 该字段不能为空。\"}" }
+            if last_event_type == EventType.THINK.value:
+                # 先发一个确保带 elapsed_time 的 think ret
+                ret = {
+                    "event": EventType.THINK.value,
+                    "content": "\n",
+                    "cover": False,
+                    "elapsed_time": (time.time() - agent_think_start_time) * 1000,
+                }
+                yield self._yield_ret(ret)
+                # 再发一个确保为 text 的 ret
+                _logger.warning(
+                    "Fail to derive the final answer from the thinking process. "
+                    f"The final result is: \n{final_result}\n"
+                )
+                ret = {
+                    "event": EventType.TEXT.value,
+                    "content": "抱歉，由于LLM指令遵从效果欠佳，尝试从思考内容中解析最终结论失败，请从思考内容中获取结论。",
+                    "cover": cover,
+                }
+                yield self._yield_ret(ret)
             # cover 为 True 时，final_result 为 stream 结束后需要最终显示的结果，可根据需要重新拼接
             # cover 为 False 时不进行覆盖
             cover = False
