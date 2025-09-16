@@ -14,11 +14,8 @@ from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 
-from aidev_wxbot.wxaibot.models import SessionAgentBinding
-
 from .context import ContextGenerator, LlmChunkMsg, stream_msg
 from .decryption import WXBizJsonMsgCrypt
-from .plugins import ALL_PLUGIN
 from ..utils.rabbitmq import rabbitmq_client
 
 logger = getLogger(__name__)
@@ -68,9 +65,7 @@ class CallBackView(View):
             return stream_msg("回答失败！", True, stream_id)
 
     def reply_event(self, payload: dict):
-        current_context = ContextGenerator(payload).generate()
-        return_msg = ALL_PLUGIN[current_context.message.event_key.split("|")[0]](current_context)
-        return return_msg
+        return stream_msg("", True, uuid.uuid4().hex)
 
     def reply_text(self, payload: dict):
         content = payload["text"]["content"]
@@ -79,41 +74,18 @@ class CallBackView(View):
             content = content[len(f"@{rtx_name}") :].strip()
 
         current_context = ContextGenerator(payload).generate()
-        if (
-            not settings.IS_INDEPENDENT_BOT
-            and not SessionAgentBinding.objects.filter(
-                sender=current_context.sender_code, group_id=current_context.group_id
-            ).exists()
-        ):
-            # 如果没有绑定过agent，强制要求绑定
-            return_msg = ALL_PLUGIN["welcome"](current_context)
-            return return_msg
-        else:
-            if settings.IS_INDEPENDENT_BOT:
-                agent_apigw_name = settings.BKPAAS_BK_PLUGIN_APIGW_NAME
-            else:
-                agent_apigw_name = (
-                    "bp"
-                    + SessionAgentBinding.objects.get(
-                        sender=current_context.sender_code, group_id=current_context.group_id
-                    ).agent_code
-                )
-        if content.lower() in ALL_PLUGIN:
-            # 如果是触发了固定的命令，就构建context，传递到命令处执行
-            return_msg = ALL_PLUGIN[content](current_context)
-            return return_msg
-        else:
-            # 生成流式响应ID
-            stream_id = f"stream_queue_{int(time.time())}_{current_context.sender_code}"
+        agent_apigw_name = settings.BKPAAS_BK_PLUGIN_APIGW_NAME
+        # 生成流式响应ID
+        stream_id = f"stream_queue_{int(time.time())}_{current_context.sender_code}"
 
-            # 启动后台线程处理实际的AI请求
-            thread = threading.Thread(
-                target=self._process_ai_request_async, args=(content, stream_id, agent_apigw_name), daemon=True
-            )
-            thread.start()
+        # 启动后台线程处理实际的AI请求
+        thread = threading.Thread(
+            target=self._process_ai_request_async, args=(content, stream_id, agent_apigw_name), daemon=True
+        )
+        thread.start()
 
-            # 立即返回"正在思考中...."的消息
-            return stream_msg("正在思考中....", False, stream_id)
+        # 立即返回"正在思考中...."的消息
+        return stream_msg("正在思考中....", False, stream_id)
 
     def _process_ai_request_async(self, content: str, stream_id: str, agent_apigw_name: str):
         """异步处理AI请求的后台方法"""

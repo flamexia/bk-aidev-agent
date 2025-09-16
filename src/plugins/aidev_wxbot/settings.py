@@ -59,8 +59,7 @@ DATABASES = {
     }
 }
 
-# 设置默认主键字段类型
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 LOGGING = {
     'version': 1,
