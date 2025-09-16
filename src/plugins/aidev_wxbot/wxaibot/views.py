@@ -24,12 +24,6 @@ logger = getLogger(__name__)
 class CallBackView(View):
     """对外提供服务的 Django 视图"""
 
-    def __init__(self):
-        super().__init__()
-        self.S_TOKEN = os.getenv("S_TOKEN")
-        self.S_ENCODING_AES_KEY = os.getenv("S_ENCODING_AES_KEY")
-        self.WEBHOOK_KEY = os.getenv("WEBHOOK_KEY")
-
     def _reply_wxaibot(self, payload: dict):
         msg_type = payload["msgtype"]
         if msg_type == "text":
@@ -199,7 +193,7 @@ class CallBackView(View):
 
     def get(self, request):
         """处理 GET 请求（验证 URL）"""
-        crypt = WXBizJsonMsgCrypt(self.S_TOKEN, self.S_ENCODING_AES_KEY, "")
+        crypt = WXBizJsonMsgCrypt(settings.WXAIBOT_TOKEN, settings.WXAIBOT_ENCODING_AES_KEY, "")
         msg_signature = request.GET.get("msg_signature")
         timestamp = request.GET.get("timestamp")
         nonce = request.GET.get("nonce")
@@ -215,7 +209,7 @@ class CallBackView(View):
 
     def post(self, request):
         """处理 POST 请求（消息回调）"""
-        crypt = WXBizJsonMsgCrypt(self.S_TOKEN, self.S_ENCODING_AES_KEY, "")
+        crypt = WXBizJsonMsgCrypt(settings.WXAIBOT_TOKEN, settings.WXAIBOT_ENCODING_AES_KEY, "")
         msg_signature = request.GET.get("msg_signature")
         timestamp = request.GET.get("timestamp")
         nonce = request.GET.get("nonce")
