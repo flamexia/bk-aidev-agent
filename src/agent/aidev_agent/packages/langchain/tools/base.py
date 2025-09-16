@@ -20,6 +20,7 @@ import contextlib
 import json
 import re
 from hashlib import md5
+from logging import getLogger
 from typing import Any, Dict, List, Optional, Type
 
 import requests
@@ -29,11 +30,16 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from pydantic import BaseModel, Field, ValidationError, create_model, field_validator
 from requests.exceptions import JSONDecodeError
 
+from aidev_agent.config import settings
+from aidev_agent.core.utils.local import request_local
 from aidev_agent.core.utils.loop import get_event_loop
+from aidev_agent.enums import CredentialType
 from aidev_agent.packages.langchain.exceptions import ToolValidationError
 from aidev_agent.packages.langchain.tools.enums import FieldType, FuncType
 
 COMPLEXED_FIELD_TYPE = ["object", "array"]
+
+_logger = getLogger(__name__)
 
 
 class Rule(BaseModel):
@@ -321,7 +327,12 @@ def make_structured_tool(
     ```
     对应的字段为: query__test=123
     """
-    default_values: dict[str, dict[str, Any]] = {"header": {}, "query": {}, "body": {}, "path": {}}
+    default_values: dict[str, dict[str, Any]] = {
+        "header": {},
+        "query": {},
+        "body": {},
+        "path": {},
+    }
     complex_fields: list[str] = []
     _params: list[BkField] = []
     method = tool.method.lower()
@@ -377,7 +388,53 @@ def make_structured_tool(
 
 
 def make_mcp_tools(server_config: dict) -> List[StructuredTool]:
+    try:
+        from bkoauth import get_access_token_by_user
+    except ImportError:
+        get_access_token_by_user = None
+
+    for _server_config in server_config.values():
+        if _server_config.pop("credential_type", "") == CredentialType.BLUEAPPS.value:
+            auth_info = {
+                "bk_app_code": settings.APP_CODE,
+                "bk_app_secret": settings.SECRET_KEY,
+            }
+            request = getattr(request_local, "request", None)
+            if request and request.user.username:
+                if get_access_token_by_user:
+                    auth_info = {"access_token": get_access_token_by_user(request.user.username).access_token}
+                else:
+                    auth_info["bk_username"] = request.user.username
+            _server_config["headers"] = {"X-Bkapi-Authorization": json.dumps(auth_info)}
+
     client = MultiServerMCPClient(server_config)
     _loop = get_event_loop()
-    tools = _loop.run_until_complete(client.get_tools())
+    try:
+        tools: List[StructuredTool] = _loop.run_until_complete(client.get_tools())
+    except Exception:
+        raise ValueError("获取MCP工具列表失败")
+    for each in tools:
+        each.coroutine = MCPExceptionWrapper(each.coroutine)
     return tools
+
+
+class MCPExceptionWrapper:
+    """可序列化的MCP异常处理包装器"""
+
+    def __init__(self, coro):
+        self.coro = coro
+
+    async def __call__(self, *args, **kwargs):
+        try:
+            return await self.coro(*args, **kwargs)
+        except Exception as err:
+            _logger.exception(f"failed to run mcp: {err}")
+            return ("[ERROR] MCP工具调用失败", None)
+
+    def __getstate__(self):
+        # 在序列化时保存协程对象
+        return {"coro": self.coro}
+
+    def __setstate__(self, state):
+        # 在反序列化时恢复协程对象
+        self.coro = state["coro"]

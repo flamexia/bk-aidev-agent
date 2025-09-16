@@ -2,10 +2,21 @@ import type { ISession, ISessionContent, IAgentInfo } from '@blueking/ai-ui-sdk/
 import { ref } from 'vue';
 
 import { HIDE_ROLE_LIST } from '../config';
-import { uuid as generateUuid } from '../utils';
 import { t } from '../lang';
+import { uuid as generateUuid } from '../utils';
 
 import type { ISessionEditItem, SdkApi } from './types';
+
+// 错误事件发射器类型
+export interface SdkErrorEvent {
+  apiName: string;
+  code: number;
+  message: string;
+  data: unknown;
+}
+
+// 错误回调函数类型
+export type SdkErrorCallback = (error: SdkErrorEvent) => void;
 
 /**
  * 使用会话管理 Store
@@ -19,6 +30,140 @@ export function useSessionStore() {
 
   // 存储会话的原始值
   const originalSessionValues = ref<Record<string, ISessionEditItem>>({});
+
+  // 消息选择模式状态
+  const isSelectMode = ref(false);
+  const selectedMessages = ref<Set<string>>(new Set());
+  const selectModeType = ref<'transfer' | 'share' | null>(null);
+
+  // 错误回调函数
+  let sdkErrorCallback: SdkErrorCallback | null = null;
+
+  /**
+   * 注册错误回调函数
+   * @param callback 错误回调函数
+   */
+  const registerErrorCallback = (callback: SdkErrorCallback) => {
+    sdkErrorCallback = callback;
+  };
+
+  /**
+   * 进入选择模式
+   * @param type 选择模式类型
+   */
+  const enterSelectMode = (type: 'transfer' | 'share') => {
+    isSelectMode.value = true;
+    selectModeType.value = type;
+    selectedMessages.value = new Set();
+  };
+
+  /**
+   * 退出选择模式
+   */
+  const exitSelectMode = () => {
+    isSelectMode.value = false;
+    selectModeType.value = null;
+    selectedMessages.value = new Set();
+  };
+
+  /**
+   * 切换消息选择状态
+   * @param messageId 消息ID
+   */
+  const toggleMessageSelection = (messageId: string) => {
+    const newSet = new Set(selectedMessages.value);
+    if (newSet.has(messageId)) {
+      newSet.delete(messageId);
+    } else {
+      newSet.add(messageId);
+    }
+    selectedMessages.value = newSet;
+  };
+
+  /**
+   * 全选/取消全选
+   * @param messageIds 所有可选择的消息ID数组
+   * @param selectAll 是否全选
+   */
+  const toggleSelectAll = (messageIds: string[], selectAll: boolean) => {
+    if (selectAll) {
+      // 全选
+      const newSet = new Set(selectedMessages.value);
+      messageIds.forEach(id => newSet.add(id));
+      selectedMessages.value = newSet;
+    } else {
+      // 取消全选
+      const newSet = new Set(selectedMessages.value);
+      messageIds.forEach(id => newSet.delete(id));
+      selectedMessages.value = newSet;
+    }
+  };
+
+  /**
+   * 检查是否全选
+   * @param messageIds 所有可选择的消息ID数组
+   * @returns 是否全选
+   */
+  const isSelectAll = (messageIds: string[]): boolean => {
+    if (messageIds.length === 0) return false;
+    return messageIds.every(id => selectedMessages.value.has(id));
+  };
+
+  /**
+   * 检查是否部分选择（半选状态）
+   * @param messageIds 所有可选择的消息ID数组
+   * @returns 是否部分选择
+   */
+  const isIndeterminate = (messageIds: string[]): boolean => {
+    if (messageIds.length === 0) return false;
+    const selectedCount = messageIds.filter(id => selectedMessages.value.has(id)).length;
+    return selectedCount > 0 && selectedCount < messageIds.length;
+  };
+
+  /**
+   * 获取已选择的消息ID数组
+   * @returns 已选择的消息ID数组
+   */
+  const getSelectedMessages = (): string[] => {
+    return Array.from(selectedMessages.value);
+  };
+
+  /**
+   * 检查消息是否被选择
+   * @param messageId 消息ID
+   * @returns 是否被选择
+   */
+  const isMessageSelected = (messageId: string): boolean => {
+    return selectedMessages.value.has(messageId);
+  };
+
+  /**
+   * 处理 SDK API 错误
+   * @param apiName API 名称
+   * @param error 错误对象
+   */
+  const handleSdkError = (apiName: string, error: unknown) => {
+    if (!sdkErrorCallback) {
+      console.error(`SDK API ${apiName} error:`, error);
+      return;
+    }
+
+    // 提取错误信息，兼容内部拦截器的错误格式
+    const errorObj = error as any;
+    const message =
+      errorObj?.error?.message || errorObj?.message || errorObj?.response?.message || '系统错误';
+    const code = errorObj?.error?.code || errorObj?.code || errorObj?.response?.code || -1;
+    const data = errorObj?.error?.data || errorObj?.data || errorObj?.response?.data || error;
+
+    const errorEvent: SdkErrorEvent = {
+      apiName,
+      code,
+      message,
+      data,
+    };
+
+    sdkErrorCallback(errorEvent);
+  };
 
   const agentInfo = ref<IAgentInfo>({
     agentName: '',
@@ -55,6 +200,7 @@ export function useSessionStore() {
       setCurrentSession(session);
     } catch (error) {
       console.error('Failed to switch session:', error);
+      handleSdkError('setCurrentSessionChain', error);
       throw error;
     }
   };
@@ -118,7 +264,12 @@ export function useSessionStore() {
     // 创建 session 并同步到后台
     const plusSession = checkSdkMethod('plusSessionApi');
 
-    await plusSession(session);
+    try {
+      await plusSession(session);
+    } catch (error) {
+      handleSdkError('plusSessionApi', error);
+      throw error;
+    }
 
     // 切换到新会话
     await switchSessionWithContents(session);
@@ -223,6 +374,7 @@ export function useSessionStore() {
         await modifySession(sessionToSync);
       } catch (error) {
         console.error('Failed to sync session to backend:', error);
+        handleSdkError('modifySessionApi', error);
         // 如果同步失败，回滚本地状态
         sessionList.value[index] = oldSession;
         sessionList.value = [...sessionList.value];
@@ -243,7 +395,12 @@ export function useSessionStore() {
   const deleteSession = async (sessionCode: string): Promise<ISessionEditItem | null> => {
     const deleteApi = checkSdkMethod('deleteSessionApi');
 
-    await deleteApi(sessionCode);
+    try {
+      await deleteApi(sessionCode);
+    } catch (error) {
+      handleSdkError('deleteSessionApi', error);
+      throw error;
+    }
 
     const index = sessionList.value.findIndex(s => s.sessionCode === sessionCode);
 
@@ -311,20 +468,26 @@ export function useSessionStore() {
 
   /**
    * 初始化会话
+   * @param isInitChat 是否初始化聊天
+   * @param loadRecentSession 是否加载最近的会话（即使有内容）
    * @returns Promise<{
    *   openingRemark: string
    *   predefinedQuestions: string[]
    * }>
    */
-  const initSession = async (isInitChat = true) => {
+  const initSession = async (isInitChat = true, loadRecentSession = false) => {
     // 获取会话列表
     let sessions = sessionList.value;
 
     if (isInitChat) {
       const getSessions = checkSdkMethod('getSessionsApi');
-      const sessions = await getSessions();
-
-      setSessionList(sessions);
+      try {
+        sessions = await getSessions();
+        setSessionList(sessions);
+      } catch (error) {
+        handleSdkError('getSessionsApi', error);
+        throw error;
+      }
     }
 
     let targetSession: ISessionEditItem | null = null;
@@ -340,15 +503,20 @@ export function useSessionStore() {
       // 获取最新会话的内容
       const getContents = checkSdkMethod('getSessionContentsApi');
 
-      targetSessionContents = await getContents(latestSession.sessionCode);
+      try {
+        targetSessionContents = await getContents(latestSession.sessionCode);
+      } catch (error) {
+        handleSdkError('getSessionContentsApi', error);
+        throw error;
+      }
 
       // 检查会话内容是否为空（检查每个内容的 content 字段）
       const hasContent = targetSessionContents
         .filter(item => !HIDE_ROLE_LIST.includes(item.role))
         .some(item => item.content && item.content.trim() !== '');
 
-      // 如果内容为空，直接使用这个会话
-      if (!hasContent) {
+      // 如果内容为空，直接使用这个会话；如果 loadRecentSession 为 true，也使用这个会话
+      if (!hasContent || loadRecentSession) {
         targetSession = { ...latestSession, isEdit: false };
       }
     }
@@ -356,6 +524,7 @@ export function useSessionStore() {
     // 如果没有找到合适的现有会话，创建新会话
     if (!targetSession) {
       targetSession = await addNewSession();
+      targetSessionContents = [];
     } else {
       // 使用现有会话
       const setContents = checkSdkMethod('setSessionContents');
@@ -368,20 +537,44 @@ export function useSessionStore() {
       // 获取会话设置
       const getAgentInfo = checkSdkMethod('getAgentInfoApi');
 
-      const { conversationSettings, promptSetting, agentName } = await getAgentInfo();
+      try {
+        const agentInfoData = await getAgentInfo();
 
-      Object.assign(agentInfo.value, {
-        conversationSettings,
-        promptSetting,
-        agentName,
-      });
+        Object.assign(agentInfo.value, agentInfoData);
+
+        // 如果存在 saasUrl 且不为空，发送一个带 cookie 的 fetch 请求
+        if (agentInfoData.saasUrl && agentInfoData.saasUrl.trim() !== '') {
+          try {
+            const response = await fetch(agentInfoData.saasUrl, {
+              credentials: 'include',
+            });
+
+            // 检查 HTTP 状态码，fetch 不会为 4xx/5xx 状态码抛出异常
+            if (!response.ok) {
+              throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+            }
+          } catch (error) {
+            console.error('Failed to fetch saasUrl:', error);
+          }
+        }
+      } catch (error) {
+        // 如果 getAgentInfo 出错，抛出统一的错误事件
+        handleSdkError('getAgentInfoApi', error);
+        throw error;
+      }
     }
 
     // 处理角色设置
-    if (agentInfo.value?.promptSetting?.content?.length) {
+    if (agentInfo.value?.promptSetting?.content?.length && targetSessionContents.length === 0) {
+      // 只要已有内容，则不需要再自动塞入 prompt
       const handleRole = checkSdkMethod('handleCompleteRole');
 
-      await handleRole(targetSession.sessionCode, agentInfo.value.promptSetting.content);
+      try {
+        await handleRole(targetSession.sessionCode, agentInfo.value.promptSetting.content);
+      } catch (error) {
+        handleSdkError('handleCompleteRole', error);
+        throw error;
+      }
     }
 
     return {
@@ -395,8 +588,14 @@ export function useSessionStore() {
    */
   const getSessionList = async () => {
     const getSessions = checkSdkMethod('getSessionsApi');
-    const sessions = await getSessions();
-    setSessionList(sessions);
+    let sessions: ISession[];
+    try {
+      sessions = await getSessions();
+      setSessionList(sessions);
+    } catch (error) {
+      handleSdkError('getSessionsApi', error);
+      throw error;
+    }
 
     // 如果当前有会话，更新当前会话的信息
     if (currentSession.value) {
@@ -436,11 +635,26 @@ export function useSessionStore() {
     deleteSession,
     setCurrentSession,
     registerSdkMethods,
+    registerErrorCallback,
     switchSessionWithContents,
     sessionContentLoading,
     agentInfo,
     getSessionList,
     sessionUpdateCounter,
+    // 选择模式相关
+    isSelectMode,
+    selectedMessages,
+    selectModeType,
+    enterSelectMode,
+    exitSelectMode,
+    toggleMessageSelection,
+    toggleSelectAll,
+    isSelectAll,
+    isIndeterminate,
+    getSelectedMessages,
+    isMessageSelected,
+    // 错误处理
+    handleSdkError,
   };
 }
 

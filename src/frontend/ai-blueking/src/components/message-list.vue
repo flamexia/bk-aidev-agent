@@ -12,9 +12,12 @@
       <render-message
         :index="index"
         :message="message"
+        :is-select-mode="isSelectMode"
+        :is-message-selected="isMessageSelected"
         @delete="handleDelete"
         @regenerate="handleRegenerate"
         @resend="handleResend"
+        @message-select="handleMessageSelect"
       />
     </div>
   </div>
@@ -30,12 +33,16 @@
     sessionContents: ISessionContent[];
     hasSessionContents: boolean;
     contentMarginBottom: number;
+    isSelectMode?: boolean;
+    isMessageSelected?: (messageId: string) => boolean;
   }
 
   interface Emits {
     (e: 'delete', index: number): void;
     (e: 'regenerate', index: number): void;
     (e: 'resend', index: number, data: { message: string }): void;
+    (e: 'message-select', messageId: string): void;
+    (e: 'scroll-position-change', isNearBottom: boolean): void;
   }
 
   const props = defineProps<Props>();
@@ -52,6 +59,9 @@
 
     const { scrollTop, scrollHeight, clientHeight } = messageWrapper.value;
     const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
+
+    // 发出滚动位置变化事件给父组件
+    emit('scroll-position-change', isNearBottom);
 
     // 只有向下滑动且接近底部时才重置滚动状态
     if (isNearBottom && scrollTop > lastScrollTop) {
@@ -88,6 +98,10 @@
 
   const handleResend = (index: number, data: { message: string }) => {
     emit('resend', index, data);
+  };
+
+  const handleMessageSelect = (messageId: string) => {
+    emit('message-select', messageId);
   };
 
   const scrollToBottomIfNeeded = () => {

@@ -55,6 +55,7 @@
           :hide-nimbus="false"
           :url="url"
           :default-top="52"
+          :sdk-error="handleSdkError"
           :default-width="defaultWidth"
         />
       </div>
@@ -69,6 +70,7 @@
 
   import AIBlueking, { AIBluekingExpose } from "@blueking/ai-blueking"
   import "@blueking/ai-blueking/dist/vue3/style.css"
+  import router from "../router"
 
   const aiBlueking = ref<AIBluekingExpose | null>(null)
   const sessionList = ref<any[]>([])
@@ -85,13 +87,25 @@
       const response = await fetch(`${url.value}/agent/info/`, {
         credentials: "include", // 包含Cookie等凭证信息
       })
+
+      // 检查 HTTP 状态码，fetch 不会为 4xx/5xx 状态码抛出异常
+      if (!response.ok || response.status !== 200) {
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`)
+      }
+
       const data = await response.json()
       agentInfo.value = data.data
       return data.data
     } catch (error) {
       console.error("获取Agent信息失败:", error)
+      router.push("/403")
       return null
     }
+  }
+
+  const handleSdkError = (error: any) => {
+    console.error("SDK错误:", error)
+    router.push("/403")
   }
 
   // 设置 AIBlueking 组件的宽度为容器宽度减去会话列表宽度
@@ -249,7 +263,7 @@
 <style lang="postcss" scoped>
   .chat-wrapper {
     width: 100%;
-    height: 100vh;
+    height: calc(100vh - 52px); /* 减去导航栏高度 */
   }
 
   .chat-container {
@@ -271,11 +285,13 @@
     display: flex;
     flex-direction: column;
     width: 280px;
-    height: 100vh;
+    height: calc(100vh - 52px); /* 减去导航栏高度 */
     background-color: #ffffff;
     padding: 12px;
+    padding-bottom: 20px; /* 底部额外留白 */
     box-sizing: border-box;
     border-right: 1px solid #efefef;
+    overflow: hidden; /* 防止整个侧边栏滚动 */
   }
 
   .top-controls {
@@ -301,8 +317,9 @@
   }
 
   .conversation-list {
-    flex: 1;
-    overflow-y: overlay;
+    flex: 0 1 auto; /* 不强制拉伸，根据内容调整 */
+    max-height: calc(100vh - 52px - 140px); /* 减去导航栏高度和顶部控件高度 */
+    overflow-y: auto;
     padding-right: 8px;
     margin-right: -8px;
   }
@@ -314,10 +331,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-y: visible; /* 空状态时不需要滚动 */
+    max-height: calc(100vh - 52px - 140px);
   }
 
   .conversation-list:not(.is-empty) {
-    flex: 1;
+    flex: 0 1 auto;
+    overflow-y: auto;
   }
 
   /* macOS 风格滚动条样式 */
@@ -326,22 +346,22 @@
   }
 
   .conversation-list::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(0, 0, 0, 0.05);
     border-radius: 4px;
   }
 
   .conversation-list::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.3);
     border-radius: 4px;
     transition: background-color 0.2s ease;
   }
 
   .conversation-list::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .conversation-list::-webkit-scrollbar-thumb:active {
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.6);
   }
 
   .conversation-item {
@@ -395,6 +415,9 @@
   .page-demo-ai-blueking {
     .handle {
       pointer-events: none;
+    }
+    .ai-blueking-container-wrapper {
+      box-shadow: none;
     }
   }
 </style>

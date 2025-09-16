@@ -2,7 +2,8 @@ version = 1
 revision = 2
 requires-python = ">=3.10.5, <4.0"
 resolution-markers = [
-    "python_full_version >= '3.12.4'",
+    "python_full_version >= '3.13'",
+    "python_full_version >= '3.12.4' and python_full_version < '3.13'",
     "python_full_version >= '3.12' and python_full_version < '3.12.4'",
     "python_full_version == '3.11.*'",
     "python_full_version < '3.11'",
@@ -10,7 +11,7 @@ resolution-markers = [
 
 [[package]]
 name = "aidev-agent"
-version = "1.0.0b32"
+version = "1.0.0b39"
 source = { editable = "." }
 dependencies = [
     { name = "asgiref" },
@@ -52,7 +53,7 @@ requires-dist = [
     { name = "h11", specifier = "==0.16.0" },
     { name = "jinja2", specifier = ">=3.1.6,<4.0.0" },
     { name = "langchain", specifier = ">=0.3.14,<1.0.0" },
-    { name = "langchain-community", specifier = "==0.3.15" },
+    { name = "langchain-community", specifier = "==0.3.28" },
     { name = "langchain-mcp-adapters", specifier = ">=0.1.9,<1.0.0" },
     { name = "langchain-openai", specifier = ">=0.3.0,<1.0.0" },
     { name = "langfuse", specifier = "<3" },
@@ -899,7 +900,8 @@ name = "ipython"
 version = "9.5.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12.4'",
+    "python_full_version >= '3.13'",
+    "python_full_version >= '3.12.4' and python_full_version < '3.13'",
     "python_full_version >= '3.12' and python_full_version < '3.12.4'",
     "python_full_version == '3.11.*'",
 ]
@@ -1098,7 +1100,7 @@ wheels = [
 
 [[package]]
 name = "langchain-community"
-version = "0.3.15"
+version = "0.3.28"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -1115,9 +1117,9 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "tenacity" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ed/47/a66620af03f108a01f7120153f144639b7531052568320ab7e8a6bb603db/langchain_community-0.3.15.tar.gz", hash = "sha256:c2fee46a0ea1b94c475bd4263edb53d5615dbe37c5263480bf55cb8e465ac235", size = 1728431, upload-time = "2025-01-21T03:18:12.881Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/08/76/35b698e00fd206eba44ca46d57860484e4b9f0e050fabac8d027e755935c/langchain_community-0.3.28.tar.gz", hash = "sha256:c97e03d91cade6c9fb73d756119744e1d4c4ea4b6b0a09f6faadfbb7360d335e", size = 33238079, upload-time = "2025-08-26T17:04:24.616Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/c8/47c0018d1448bbd40cd82d0d4ed72b3b9c63e7b23990c7c429da996cd2c1/langchain_community-0.3.15-py3-none-any.whl", hash = "sha256:5b6ac359f75922a826566f94eb9a9b5c763cc78f395f0baf2f5638e62fdae1dd", size = 2511748, upload-time = "2025-01-21T03:18:10.769Z" },
+    { url = "https://files.pythonhosted.org/packages/db/6e/735e7e5376908b8dad204fa76d96a3e785d06c7b701660ad4f5efb6022cb/langchain_community-0.3.28-py3-none-any.whl", hash = "sha256:52e437b8f4e899ff59fb90c54b5320bf99153da34f214488ebacdbc969a50faf", size = 2530800, upload-time = "2025-08-26T17:04:21.873Z" },
 ]
 
 [[package]]
@@ -1480,7 +1482,8 @@ name = "numpy"
 version = "2.3.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.12.4'",
+    "python_full_version >= '3.13'",
+    "python_full_version >= '3.12.4' and python_full_version < '3.13'",
     "python_full_version >= '3.12' and python_full_version < '3.12.4'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/37/7d/3fec4199c5ffb892bed55cff901e4f39a58c81df9c44c280499e92cad264/numpy-2.3.2.tar.gz", hash = "sha256:e0486a11ec30cdecb53f184d496d1c6a20786c81e55e41640270130056f8ee48", size = 20489306, upload-time = "2025-07-24T21:32:07.553Z" }

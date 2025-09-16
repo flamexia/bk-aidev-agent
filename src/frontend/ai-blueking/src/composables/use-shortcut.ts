@@ -50,12 +50,9 @@ export function useShortcut(options: UseShortcutOptions) {
    * 处理快捷方式点击
    * @param data 包含快捷方式对象和来源的信息
    * @param data.shortcut 快捷方式对象
-   * @param data.source 来源：'popup' 表示来自 render-popup，'main' 表示来自主界面，'ai-selected' 表示来自 ai-selected-box
+   * @param data.source 来源：'popup' 表示来自 render-popup，'main' 表示来自主界面
    */
-  const handleShortcutClick = (data: {
-    shortcut: IShortcut;
-    source: 'popup' | 'main' | 'ai-selected';
-  }) => {
+  const handleShortcutClick = (data: { shortcut: IShortcut; source: 'popup' | 'main' }) => {
     const { shortcut, source = 'main' } = data;
     const actualShortcut = shortcut;
 
@@ -106,17 +103,20 @@ export function useShortcut(options: UseShortcutOptions) {
     const allRequiredFieldsHaveValues =
       modifiedShortcut.components?.every(item => {
         if (!item.required) return true;
-        return item.default !== undefined && item.default !== null && item.default !== '';
+        return (
+          (item.default !== undefined && item.default !== null && item.default !== '') ||
+          item.selectedText
+        );
       }) ||
       !modifiedShortcut.components ||
       modifiedShortcut.components.length === 0;
 
     // 定义可以自动提交的来源列表
-    const autoSubmitSources: Array<'popup' | 'main' | 'ai-selected'> = ['popup', 'ai-selected'];
+    const autoSubmitSources: Array<'popup' | 'main'> = ['popup'];
 
     // 根据来源决定行为
     if (autoSubmitSources.includes(source) && allRequiredFieldsHaveValues) {
-      // 来自 popup 或 ai-selected 且有默认值，直接发送
+      // 来自 popup 且有默认值，直接发送
       // 这里我们仍然设置 currentShortcut，让 custom-input 处理自动提交
       (modifiedShortcut as any).autoSubmit = true;
     }

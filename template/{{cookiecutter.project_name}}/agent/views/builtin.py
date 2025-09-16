@@ -1,4 +1,5 @@
 # PLEASE DO NOT MODIFY THIS FILE!
+import copy
 import json
 from logging import getLogger
 
@@ -19,10 +20,12 @@ from rest_framework.status import is_success
 from rest_framework.views import APIView, Response
 from rest_framework.viewsets import ViewSetMixin
 
+from agent.permissions import AgentPluginPermission
 from agent.services.agent import (
     get_agent_config_info,
     get_agent_role_info,
 )
+from agent.utils import set_user_access_token
 
 logger = getLogger(__name__)
 
@@ -30,6 +33,7 @@ logger = getLogger(__name__)
 @method_decorator(login_exempt, name="dispatch")
 @method_decorator(inject_user_token, name="dispatch")
 class PluginViewSet(ViewSetMixin, APIView):
+    permission_classes = [AgentPluginPermission]
     authentication_classes = custom_authentication_classes
 
     def initialize_request(self, request, *args, **kwargs):
@@ -165,5 +169,27 @@ class ChatCompletionViewSet(PluginViewSet):
 class AgentInfoViewSet(PluginViewSet):
     @action(detail=False, methods=["GET"], url_path="info", url_name="info")
     def info(self, request):
-        agent_info = get_agent_config_info()
+        agent_info = get_agent_config_info(request.user.username)
+
+        # 新增群聊信息
+        agent_info["chat_group"] = {"enabled": settings.CHAT_GROUP_ENABLED, "staff": settings.CHAT_GROUP_STAFF}
         return Response(data=agent_info)
+
+    @action(detail=False, methods=["GET"], url_path="ping", url_name="ping")
+    def ping(self, request):
+        set_user_access_token(request)
+        return Response(data="pong")
+
+
+class ChatGroupViewSet(PluginViewSet):
+    def create(self, request):
+        data = request.data
+        username = request.user.username
+
+        data["users"] = copy.deepcopy(settings.CHAT_GROUP_STAFF)
+        data["users"].append(username)
+        data["chat_group_type"] = settings.CHAT_GROUP_TYPE
+        data["username"] = username
+
+        result = client.api.create_chat_group(json=request.data, headers={"X-BKAIDEV-USER": username})
+        return Response(data=result["data"])

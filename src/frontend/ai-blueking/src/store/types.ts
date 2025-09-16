@@ -1,4 +1,6 @@
+// 从 SDK 的 types 模块导入类型
 import type { ISession, ISessionContent, ISessionPrompt } from '@blueking/ai-ui-sdk/types';
+import type { IAgentInfo as AIUIAgentInfo } from '@blueking/ai-ui-sdk/types';
 
 /**
  * 扩展 ISession 接口，添加 isEdit 属性
@@ -31,9 +33,8 @@ export interface SdkApi {
   getAgentInfoApi: () => Promise<IAgentInfo>;
   plusSessionApi: (session: ISession) => Promise<any>;
   handleCompleteRole: (sessionCode: string, prompts: ISessionPrompt[]) => Promise<any>;
+  getChatGroupApi: (data: import('@blueking/ai-ui-sdk/types').IChatGroupRequest) => Promise<import('@blueking/ai-ui-sdk/types').IChatGroup>;
 }
-
-import type { IAgentInfo as AIUIAgentInfo } from '@blueking/ai-ui-sdk/types';
 
 // 使用 ai-ui-sdk 中的 IAgentInfo 类型
 export type IAgentInfo = AIUIAgentInfo;
