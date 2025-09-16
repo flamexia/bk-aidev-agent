@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from aidev_wxbot_plugin.api import BkApi
+from aidev_wxbot.api import BkApi
 
 
 class BkAiDevApi:

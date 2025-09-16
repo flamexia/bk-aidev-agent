@@ -7,9 +7,9 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aidev_wxbot_plugin.api.wxbot import XworkBackendApi
-from aidev_wxbot_plugin.context import Context, Message
-from aidev_wxbot_plugin.context.message import MsgType
+from aidev_wxbot.api.wxbot import XworkBackendApi
+from aidev_wxbot.context import Context, Message
+from aidev_wxbot.context.message import MsgType
 
 logger = logging.getLogger(__name__)
 

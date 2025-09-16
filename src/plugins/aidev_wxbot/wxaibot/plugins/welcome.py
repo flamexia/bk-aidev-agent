@@ -2,11 +2,11 @@ import uuid
 
 from django.conf import settings
 
-from aidev_wxbot_plugin.api.bkaidev import BkAiDevApi
-from aidev_wxbot_plugin.context.message import MsgType
-from aidev_wxbot_plugin.wxaibot.context import WxWorkAiBotContext, stream_msg
-from aidev_wxbot_plugin.wxaibot.models import SessionAgentBinding
-from aidev_wxbot_plugin.wxaibot.plugins import register_plugin
+from aidev_wxbot.api.bkaidev import BkAiDevApi
+from aidev_wxbot.context.message import MsgType
+from aidev_wxbot.wxaibot.context import WxWorkAiBotContext, stream_msg
+from aidev_wxbot.wxaibot.models import SessionAgentBinding
+from aidev_wxbot.wxaibot.plugins import register_plugin
 
 
 def get_return_task_id(context: WxWorkAiBotContext):

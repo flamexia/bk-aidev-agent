@@ -2,7 +2,7 @@ import os
 
 import requests
 
-from aidev_wxbot_plugin.api import Api, BkApi
+from aidev_wxbot.api import Api, BkApi
 
 
 class WxbotApi:

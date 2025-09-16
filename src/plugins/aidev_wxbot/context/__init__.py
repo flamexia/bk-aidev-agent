@@ -2,8 +2,8 @@ from typing import Union
 
 from pydantic import BaseConfig, BaseModel, ConfigDict, Field
 
-from aidev_wxbot_plugin.context.message import Message
-from aidev_wxbot_plugin.utils import AttrDict
+from aidev_wxbot.context.message import Message
+from aidev_wxbot.utils import AttrDict
 
 
 class Context(BaseModel):

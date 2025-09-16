@@ -2,7 +2,7 @@ import logging
 
 import stackprinter
 
-logger = logging.getLogger("aidev_wxbot_plugin")
+logger = logging.getLogger("aidev_wxbot")
 
 
 def handle_exception(exc):

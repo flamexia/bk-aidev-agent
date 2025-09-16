@@ -1,5 +1,5 @@
 """
-WSGI config for aidev_wxbot_plugin project.
+WSGI config for aidev_wxbot project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aidev_wxbot_plugin.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aidev_wxbot.settings")
 
 application = get_wsgi_application()

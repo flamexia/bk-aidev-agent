@@ -1,5 +1,5 @@
 """
-Django implementation for aidev_wxbot_plugin.
+Django implementation for aidev_wxbot.
 """
 
 import json
@@ -14,7 +14,7 @@ from django.conf import settings
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 
-from aidev_wxbot_plugin.wxaibot.models import SessionAgentBinding
+from aidev_wxbot.wxaibot.models import SessionAgentBinding
 
 from .context import ContextGenerator, LlmChunkMsg, stream_msg
 from .decryption import WXBizJsonMsgCrypt
