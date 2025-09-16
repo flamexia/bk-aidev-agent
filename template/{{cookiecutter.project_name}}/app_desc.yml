@@ -42,15 +42,15 @@ modules:
           - name: DJANGO_ALLOW_ASYNC_UNSAFE
             value: "True"
             description: set django allow unsafe async
-          - name: WXAIBOT_TOKEN
-            value: WXAIBOT_TOKEN
+          - name: BKAPP_WXAIBOT_TOKEN
+            value: BKAPP_WXAIBOT_TOKEN
             description: wxaibot token
-          - name: WXAIBOT_ENCODING_AES_KEY
-            value: WXAIBOT_ENCODING_AES_KEY
+          - name: BKAPP_WXAIBOT_ENCODING_AES_KEY
+            value: BKAPP_WXAIBOT_ENCODING_AES_KEY
             description: wxaibot ecoding aes key
-          - name: XWORK_BACKEND_API_NAME
+          - name: BKAPP_XWORK_BACKEND_API_NAME
             value: bkchat
-            description: XWORK_BACKEND_API_NAME
+            description: BKAPP_XWORK_BACKEND_API_NAME
           {% if cookiecutter.llm_gateway_url -%}
           - name: LLM_GW_ENDPOINT
             value: "{{cookiecutter.llm_gateway_url}}"
