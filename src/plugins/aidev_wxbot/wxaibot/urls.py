@@ -1,11 +1,17 @@
 """
-URL routing for aidev_wxbot.
+URL routing for aidev_wxbot using DRF ViewSets.
 """
 
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from .views import CallBackView
+from .views import WxAiBotViewSet
+
+# 创建DRF路由器
+router = DefaultRouter()
+router.register(r"wxaibot", WxAiBotViewSet, basename="wxaibot")
 
 urlpatterns = [
-    path("wxbot_callback", CallBackView.as_view(), name="wxbot_callback"),
+    # DRF ViewSet路由
+    path("", include(router.urls)),
 ]

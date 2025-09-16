@@ -1,5 +1,5 @@
 """
-Django implementation for aidev_wxbot.
+Django REST Framework implementation for aidev_wxbot.
 """
 
 import json
@@ -11,8 +11,12 @@ from logging import getLogger
 
 import requests
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
-from django.views import View
+from django.http import HttpResponse
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
 
 from .context import ContextGenerator, LlmChunkMsg, stream_msg
 from .decryption import WXBizJsonMsgCrypt
@@ -21,21 +25,22 @@ from ..utils.rabbitmq import rabbitmq_client
 logger = getLogger(__name__)
 
 
-class CallBackView(View):
-    """对外提供服务的 Django 视图"""
+class WxAiBotViewSet(ViewSet):
+    """微信AI机器人的DRF ViewSet"""
 
-    def _reply_wxaibot(self, payload: dict):
+    def _reply_wxaibot(self, payload: dict) -> dict:
+        """处理微信AI机器人的回复逻辑"""
         msg_type = payload["msgtype"]
         if msg_type == "text":
             logger.info("go to reply_text")
-            return_msg = self.reply_text(payload)
+            return_msg = self._reply_text(payload)
         elif msg_type == "event":
             logger.info("go to reply_event")
-            return_msg = self.reply_event(payload)
+            return_msg = self._reply_event(payload)
         elif msg_type == "stream":
             logger.info("go to reply_stream")
             stream_id = payload["stream"]["id"]
-            return_msg = self.reply_stream(stream_id)
+            return_msg = self._reply_stream(stream_id)
         else:
             return_msg = {
                 "msgtype": "stream",
@@ -48,7 +53,8 @@ class CallBackView(View):
         return return_msg
 
     @staticmethod
-    def reply_stream(stream_id: str):
+    def _reply_stream(stream_id: str) -> dict:
+        """处理流式响应"""
         try:
             # 从队列中取出单个元素
             llm_chunk = LlmChunkMsg(stream_id=stream_id)
@@ -58,10 +64,12 @@ class CallBackView(View):
             logger.error(f"获取流式响应失败: {e}")
             return stream_msg("回答失败！", True, stream_id)
 
-    def reply_event(self, payload: dict):
+    def _reply_event(self, payload: dict) -> dict:
+        """处理事件消息"""
         return stream_msg("", True, uuid.uuid4().hex)
 
-    def reply_text(self, payload: dict):
+    def _reply_text(self, payload: dict) -> dict:
+        """处理文本消息"""
         content = payload["text"]["content"]
         rtx_name = os.getenv("RTX_NAME")
         if content.startswith(f"@{rtx_name}"):
@@ -191,7 +199,8 @@ class CallBackView(View):
             error_chunk = LlmChunkMsg(content=f"请求处理失败: {str(e)}", is_finish=True, stream_id=stream_id)
             error_chunk.append_to_cache(rabbitmq_client)
 
-    def get(self, request):
+    @action(detail=False, methods=["get"], url_path="callback")
+    def verify_url(self, request: Request) -> HttpResponse:
         """处理 GET 请求（验证 URL）"""
         crypt = WXBizJsonMsgCrypt(settings.WXAIBOT_TOKEN, settings.WXAIBOT_ENCODING_AES_KEY, "")
         msg_signature = request.GET.get("msg_signature")
@@ -204,10 +213,11 @@ class CallBackView(View):
         logger.info(echostr)
         if ret != 0:
             logger.error("URL 验证失败")
-            return JsonResponse({"error": "验证失败"}, status=500)
+            return Response({"error": "验证失败"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return HttpResponse(echostr)
 
-    def post(self, request):
+    @action(detail=False, methods=["post"], url_path="callback")
+    def message_callback(self, request: Request) -> HttpResponse:
         """处理 POST 请求（消息回调）"""
         crypt = WXBizJsonMsgCrypt(settings.WXAIBOT_TOKEN, settings.WXAIBOT_ENCODING_AES_KEY, "")
         msg_signature = request.GET.get("msg_signature")
@@ -219,19 +229,10 @@ class CallBackView(View):
         ret, decrypt_post_json_data = crypt.DecryptMsg(post_data, msg_signature, timestamp, nonce)
         if ret != 0:
             logger.error("消息内容解密失败")
-            return JsonResponse({"error": "解密失败"}, status=500)
+            return Response({"error": "解密失败"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         post_json = json.loads(decrypt_post_json_data)
         logger.info(f"企微发送的消息\n=============\n{post_json}")
         return_msg = self._reply_wxaibot(post_json)
         ret, wxbot_encrypt_msg = crypt.EncryptMsg(json.dumps(return_msg, ensure_ascii=False), nonce, timestamp)
         logger.info(f"返回的消息\n=============\n{return_msg}")
         return HttpResponse(content=wxbot_encrypt_msg, content_type="text/plain")
-
-
-class DebugView(CallBackView):
-    def post(self, request):
-        return_msg = self._reply_wxaibot(json.loads(request.body.decode("utf-8")))
-        return JsonResponse(return_msg)
-
-    def get(self, request):
-        return JsonResponse({"result": True})
