@@ -1,7 +1,5 @@
 import os
 
-import requests
-
 from aidev_wxbot.api import Api, BkApi
 
 
@@ -16,10 +14,6 @@ class WxbotApi:
         return self.api.call_action(
             f"send?response_code={response_code}", json=data, headers={"Content-Type": "application/json"}
         )
-
-    def get_chat(self, chat_url):
-        res = requests.get(chat_url)
-        return res.json()
 
 
 class XworkBackendApi:
