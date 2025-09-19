@@ -16,6 +16,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+[tool.poetry.scripts]
+"aidev_wxbot.manage" = "aidev_wxbot.manage:main"
+
 
 [build-system]
 requires = ["poetry-core"]
