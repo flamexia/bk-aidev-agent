@@ -20,6 +20,7 @@ from rest_framework.viewsets import ViewSet
 
 from .context import ContextGenerator, LlmChunkMsg, stream_msg
 from .decryption import WXBizJsonMsgCrypt
+from ..api.bkaidev import BkAiDevApi
 from ..utils.rabbitmq import rabbitmq_client
 
 logger = getLogger(__name__)
@@ -31,6 +32,13 @@ class WxAiBotViewSet(ViewSet):
     # 微信回调接口不需要DRF认证，使用微信自己的签名验证
     authentication_classes = []
     permission_classes = []
+
+    @property
+    def wxbot_config(self):
+        try:
+            return BkAiDevApi().retrieve_agent_channel_configs("rtx")["data"]["config"]
+        except Exception:
+            return {"rtx_token": settings.WXAIBOT_TOKEN, "rtx_encoding_aes_key": settings.WXAIBOT_ENCODING_AES_KEY}
 
     def _reply_wxaibot(self, payload: dict) -> dict:
         """处理微信AI机器人的回复逻辑"""
@@ -213,7 +221,7 @@ class WxAiBotViewSet(ViewSet):
 
     def _verify_url(self, request: Request) -> HttpResponse:
         """处理 GET 请求（验证 URL）"""
-        crypt = WXBizJsonMsgCrypt(settings.WXAIBOT_TOKEN, settings.WXAIBOT_ENCODING_AES_KEY, "")
+        crypt = WXBizJsonMsgCrypt(self.wxbot_config["rtx_token"], self.wxbot_config["rtx_encoding_aes_key"], "")
         msg_signature = request.GET.get("msg_signature")
         timestamp = request.GET.get("timestamp")
         nonce = request.GET.get("nonce")
@@ -229,7 +237,7 @@ class WxAiBotViewSet(ViewSet):
 
     def _message_callback(self, request: Request) -> HttpResponse:
         """处理 POST 请求（消息回调）"""
-        crypt = WXBizJsonMsgCrypt(settings.WXAIBOT_TOKEN, settings.WXAIBOT_ENCODING_AES_KEY, "")
+        crypt = WXBizJsonMsgCrypt(self.wxbot_config["rtx_token"], self.wxbot_config["rtx_encoding_aes_key"], "")
         msg_signature = request.GET.get("msg_signature")
         timestamp = request.GET.get("timestamp")
         nonce = request.GET.get("nonce")

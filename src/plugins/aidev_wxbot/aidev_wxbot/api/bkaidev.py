@@ -1,17 +1,15 @@
-from django.conf import settings
-
 from aidev_wxbot.api import BkApi
+from django.conf import settings
 
 
 class BkAiDevApi:
     def __init__(self):
         self.api = BkApi("bkaidev")
 
-    def list_agent(self, username):
-        return self.api.call_action("list_agent", "GET", params={"username": username})
-
-    def retrieve_agent(self, agent_code):
-        return self.api.call_action(f"openapi/aidev/resource/v1/agent/{agent_code}/", "GET")
+    def retrieve_agent_channel_configs(self, channel_type):
+        return self.api.call_action(
+            f"openapi/aidev/resource/v1/agent_channel/configs/?channel_type={channel_type}/", "GET"
+        )
 
 
 class AgentBackend:
