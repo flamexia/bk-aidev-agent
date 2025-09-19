@@ -55,21 +55,6 @@ ROOT_URLCONF = 'aidev_wxbot.urls'
 
 WSGI_APPLICATION = 'aidev_wxbot.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('GCS_MYSQL_NAME', ''),
-        'USER': os.getenv('GCS_MYSQL_USER', ''),
-        'PASSWORD': os.getenv('GCS_MYSQL_PASSWORD', ''),
-        'HOST': os.getenv('GCS_MYSQL_HOST', ''),
-        'PORT': os.getenv('GCS_MYSQL_PORT', ''),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'isolation_level': None,  # 禁用事务隔离级别检查
-        },
-    }
-}
 
 LOGGING = {
     'version': 1,
