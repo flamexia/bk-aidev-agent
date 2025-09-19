@@ -1,28 +1,25 @@
-[project]
-authors = [
-    {name = "blueking"},
-]
-license = {text = "MIT"}
-requires-python = "<4.0,>=3.10.5"
-dependencies = [
-    "pydantic==2.11.7",
-    "stackprinter==0.2.12",
-    "pycryptodome==3.23.0",
-    "requests==2.32.5",
-    "pika<2.0,>=1.3.0",
-    "blueapps[opentelemetry]>=4.15.1,<5.0",
-    "pip"
-]
-name = "aidev-wxbot-plugin"
+[tool.poetry]
+name = "aidev-wxbot"
 version = "0.1.0"
 description = "bkaidev wxbot plugin"
+authors = ["tencentblueking"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "aidev_wxbot"}]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 
-[tool.pdm.build]
-includes = ["aidev_wxbot_plugin"]
 
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 exclude = ["*/config/", "*/migrations/"]
