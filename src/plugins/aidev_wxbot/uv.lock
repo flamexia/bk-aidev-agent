@@ -1,19 +1,14 @@
 version = 1
 revision = 2
-requires-python = ">=3.10.5, <4.0"
-resolution-markers = [
-    "python_full_version >= '3.13'",
-    "python_full_version < '3.13'",
-]
+requires-python = ">=3.10"
 
 [[package]]
-name = "aidev-wxbot-plugin"
-version = "0.1.0"
+name = "aidev-wxbot"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "blueapps", extra = ["opentelemetry"] },
     { name = "pika" },
-    { name = "pip" },
     { name = "pycryptodome" },
     { name = "pydantic" },
     { name = "requests" },
@@ -24,11 +19,10 @@ dependencies = [
 requires-dist = [
     { name = "blueapps", extras = ["opentelemetry"], specifier = ">=4.15.1,<5.0" },
     { name = "pika", specifier = ">=1.3.0,<2.0" },
-    { name = "pip" },
-    { name = "pycryptodome", specifier = "==3.23.0" },
-    { name = "pydantic", specifier = "==2.11.7" },
-    { name = "requests", specifier = "==2.32.5" },
-    { name = "stackprinter", specifier = "==0.2.12" },
+    { name = "pycryptodome", specifier = ">=3.23.0" },
+    { name = "pydantic", specifier = ">=2.11.7" },
+    { name = "requests", specifier = ">=2.32.5" },
+    { name = "stackprinter", specifier = ">=0.2.12" },
 ]
 
 [[package]]
@@ -773,15 +767,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/db/db/d4102f356af18f316c67f2cead8ece307f731dd63140e2c71f170ddacf9b/pika-1.3.2.tar.gz", hash = "sha256:b2a327ddddf8570b4965b3576ac77091b850262d34ce8c1d8cb4e4146aa4145f", size = 145029, upload-time = "2023-05-05T14:25:43.368Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f9/f3/f412836ec714d36f0f4ab581b84c491e3f42c6b5b97a6c6ed1817f3c16d0/pika-1.3.2-py3-none-any.whl", hash = "sha256:0779a7c1fafd805672796085560d290213a465e4f6f76a6fb19e378d8041a14f", size = 155415, upload-time = "2023-05-05T14:25:41.484Z" },
-]
-
-[[package]]
-name = "pip"
-version = "25.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/20/16/650289cd3f43d5a2fadfd98c68bd1e1e7f2550a1a5326768cddfbcedb2c5/pip-25.2.tar.gz", hash = "sha256:578283f006390f85bb6282dffb876454593d637f5d1be494b5202ce4877e71f2", size = 1840021, upload-time = "2025-07-30T21:50:15.401Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b7/3f/945ef7ab14dc4f9d7f40288d2df998d1837ee0888ec3659c813487572faa/pip-25.2-py3-none-any.whl", hash = "sha256:6d67a2b4e7f14d8b31b8b52648866fa717f45a1eb70e83002f4331d07e953717", size = 1752557, upload-time = "2025-07-30T21:50:13.323Z" },
 ]
 
 [[package]]
