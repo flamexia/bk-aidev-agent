@@ -51,6 +51,12 @@ modules:
           - name: BKAPP_XWORK_BACKEND_API_NAME
             value: bkchat
             description: BKAPP_XWORK_BACKEND_API_NAME
+          - name: BKAPP_CORPID
+            value: BKAPP_CORPID
+            description: corpid
+          - name: BKAPP_CORPSECRET
+            value: BKAPP_CORPSECRET
+            description: corpsecret
           {% if cookiecutter.llm_gateway_url -%}
           - name: LLM_GW_ENDPOINT
             value: "{{cookiecutter.llm_gateway_url}}"
