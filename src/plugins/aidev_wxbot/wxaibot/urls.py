@@ -9,7 +9,7 @@ from .views import WxAiBotViewSet
 
 # 创建DRF路由器
 router = DefaultRouter()
-router.register(r"wxaibot", WxAiBotViewSet, basename="wxaibot")
+router.register(r"", WxAiBotViewSet, basename="wxaibot")
 
 urlpatterns = [
     # DRF ViewSet路由

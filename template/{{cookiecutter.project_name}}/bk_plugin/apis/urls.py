@@ -17,10 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def to_wxbot_callback_path(request):
     query_string = request.META.get("QUERY_STRING", "")
-    target_url = f"http://{settings.BK_APP_CODE}--wxbot.bkapp-{settings.BK_APP_CODE}-{settings.ENVIRONMENT}/callback"
-    if query_string:
-        target_url += f"?{query_string}"
-
+    target_url = f"http://{settings.BK_APP_CODE}--wxbot.bkapp-{settings.BK_APP_CODE}-{settings.ENVIRONMENT}/callback/?{query_string}"
     if request.method == "GET":
         response = requests.get(
             target_url,
@@ -39,4 +36,4 @@ def to_wxbot_callback_path(request):
     )
 
 
-urlpatterns = (path("", include("agent.urls")), re_path("^wxbot_callback$", to_wxbot_callback_path))
+urlpatterns = (path("", include("agent.urls")), re_path(r"^wxbot_callback/?$", to_wxbot_callback_path))

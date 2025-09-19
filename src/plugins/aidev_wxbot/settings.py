@@ -5,13 +5,15 @@ Django settings for aidev_wxbot.
 import os
 
 BK_APIGW_MANAGER_URL_TMPL = os.getenv("BK_APIGW_MANAGER_URL_TMPL")
-BKPAAS_BK_PLUGIN_APIGW_NAME = os.getenv("BKPAAS_BK_PLUGIN_APIGW_NAME", "bp-ai-bkchat-use")
+BKPAAS_BK_PLUGIN_APIGW_NAME = os.getenv("BKPAAS_BK_PLUGIN_APIGW_NAME", "")
 BKPAAS_APP_SECRET = os.getenv("BKPAAS_APP_SECRET")
 BKPAAS_APP_CODE = os.getenv("BKPAAS_APP_CODE")
 BKPAAS_ENVIRONMENT = os.getenv("BKPAAS_ENVIRONMENT")
-XWORK_BACKEND_API_NAME = os.getenv("BKAPP_XWORK_BACKEND_API_NAME")
+XWORK_BACKEND_API_URL = os.getenv("BKAPP_XWORK_BACKEND_API_URL")
 WXAIBOT_TOKEN = os.getenv("BKAPP_WXAIBOT_TOKEN")
 WXAIBOT_ENCODING_AES_KEY = os.getenv("BKAPP_WXAIBOT_ENCODING_AES_KEY")
+CORPID = os.getenv("BKAPP_CORPID")
+CORPSECRET = os.getenv("BKAPP_CORPSECRET")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,8 +31,18 @@ ALLOWED_HOSTS = ['*']  # 允许所有主机访问，生产环境建议设置具�
 
 # Application definition
 INSTALLED_APPS = [
+    'rest_framework',
     'aidev_wxbot.wxaibot',
 ]
+
+# Django REST Framework 配置
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],  # 禁用默认认证
+    'DEFAULT_PERMISSION_CLASSES': [],      # 禁用默认权限检查
+    'UNAUTHENTICATED_USER': None,          # 设置未认证用户为None
+    'UNAUTHENTICATED_TOKEN': None,         # 设置未认证token为None
+}
+
 
 MIDDLEWARE = [
     'aidev_wxbot.utils.exception.ExceptionHandlerMiddleware',
@@ -58,8 +70,6 @@ DATABASES = {
         },
     }
 }
-
-
 
 LOGGING = {
     'version': 1,

@@ -1,11 +1,17 @@
 from django.conf import settings
 
-from aidev_wxbot.api import BkApi
+from aidev_wxbot.api import Api
 
 
 class XworkBackendApi:
     def __init__(self):
-        self.api = BkApi(settings.XWORK_BACKEND_API_NAME)
+        self.api = Api(settings.XWORK_BACKEND_API_NAME)
 
-    def convert_to_rtx(self, userid_list: list):
-        return self.api.call_action("convert_to_name", "POST", json={"userid_list": userid_list})
+    @property
+    def access_token(self):
+        return self.api.call_action(f"/gettoken?corpid={settings.CORPID}&corpsecret={settings.CORPSECRET}")[
+            "access_token"
+        ]
+
+    def get_user_info(self, user_id):
+        return self.api.call_action(f"/user/get?access_token={self.access_token}&userid={user_id}", "GET")

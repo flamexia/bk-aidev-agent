@@ -131,10 +131,11 @@ class WxWorkAiBotContext(Context):
 
 @lru_cache(maxsize=100)
 def id_to_name(rtx_id):
-    res = XworkBackendApi().convert_to_rtx([rtx_id])
+    res = XworkBackendApi().get_user_info(rtx_id)
     if not res:
-        raise Exception(f"转换失败 {res}")
-    rtx_name = res["user_list"][0]["name"]
+        logger.error(Exception(f"转换失败 {res}"))
+        return rtx_id
+    rtx_name = res["name"]
     return rtx_name
 
 
@@ -152,7 +153,7 @@ class ContextGenerator:
     def generate(self) -> WxWorkAiBotContext:
         logger.info(f"企微传递的参数是 {json.dumps(self.payload, ensure_ascii=False)}")
         sender_code = self.payload.get("from", {}).get("userid")
-        sender_id = id_to_name(sender_code)
+        sender_id = sender_code
         from_type = self.payload.get("chattype")
         chat_id = self.payload.get("chatid")
         ctx_data = {

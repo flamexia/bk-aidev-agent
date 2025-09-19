@@ -28,6 +28,10 @@ logger = getLogger(__name__)
 class WxAiBotViewSet(ViewSet):
     """微信AI机器人的DRF ViewSet"""
 
+    # 微信回调接口不需要DRF认证，使用微信自己的签名验证
+    authentication_classes = []
+    permission_classes = []
+
     def _reply_wxaibot(self, payload: dict) -> dict:
         """处理微信AI机器人的回复逻辑"""
         msg_type = payload["msgtype"]
@@ -199,8 +203,15 @@ class WxAiBotViewSet(ViewSet):
             error_chunk = LlmChunkMsg(content=f"请求处理失败: {str(e)}", is_finish=True, stream_id=stream_id)
             error_chunk.append_to_cache(rabbitmq_client)
 
-    @action(detail=False, methods=["get"], url_path="callback")
-    def verify_url(self, request: Request) -> HttpResponse:
+    @action(detail=False, methods=["get", "post"], url_path="callback")
+    def callback(self, request: Request) -> HttpResponse:
+        """处理微信回调请求（GET用于URL验证，POST用于消息回调）"""
+        if request.method == "GET":
+            return self._verify_url(request)
+        elif request.method == "POST":
+            return self._message_callback(request)
+
+    def _verify_url(self, request: Request) -> HttpResponse:
         """处理 GET 请求（验证 URL）"""
         crypt = WXBizJsonMsgCrypt(settings.WXAIBOT_TOKEN, settings.WXAIBOT_ENCODING_AES_KEY, "")
         msg_signature = request.GET.get("msg_signature")
@@ -216,8 +227,7 @@ class WxAiBotViewSet(ViewSet):
             return Response({"error": "验证失败"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return HttpResponse(echostr)
 
-    @action(detail=False, methods=["post"], url_path="callback")
-    def message_callback(self, request: Request) -> HttpResponse:
+    def _message_callback(self, request: Request) -> HttpResponse:
         """处理 POST 请求（消息回调）"""
         crypt = WXBizJsonMsgCrypt(settings.WXAIBOT_TOKEN, settings.WXAIBOT_ENCODING_AES_KEY, "")
         msg_signature = request.GET.get("msg_signature")
