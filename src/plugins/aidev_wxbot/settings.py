@@ -3,17 +3,15 @@ Django settings for aidev_wxbot.
 """
 
 import os
-import pymysql
 
-# 让Django使用PyMySQL作为MySQLdb的替代品
-pymysql.install_as_MySQLdb()
 BK_APIGW_MANAGER_URL_TMPL = os.getenv("BK_APIGW_MANAGER_URL_TMPL")
 BKPAAS_BK_PLUGIN_APIGW_NAME = os.getenv("BKPAAS_BK_PLUGIN_APIGW_NAME", "bp-ai-bkchat-use")
 BKPAAS_APP_SECRET = os.getenv("BKPAAS_APP_SECRET")
 BKPAAS_APP_CODE = os.getenv("BKPAAS_APP_CODE")
 BKPAAS_ENVIRONMENT = os.getenv("BKPAAS_ENVIRONMENT")
-WXAIBOT_TOKEN = os.getenv("WXAIBOT_ENCODING_AES_KEY")
-WXAIBOT_ENCODING_AES_KEY = os.getenv("WXAIBOT_ENCODING_AES_KEY")
+XWORK_BACKEND_API_NAME = os.getenv("BKAPP_XWORK_BACKEND_API_NAME")
+WXAIBOT_TOKEN = os.getenv("BKAPP_WXAIBOT_TOKEN")
+WXAIBOT_ENCODING_AES_KEY = os.getenv("BKAPP_WXAIBOT_ENCODING_AES_KEY")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
