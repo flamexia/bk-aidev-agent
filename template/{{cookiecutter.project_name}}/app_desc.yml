@@ -48,9 +48,6 @@ modules:
           - name: BKAPP_WXAIBOT_ENCODING_AES_KEY
             value: BKAPP_WXAIBOT_ENCODING_AES_KEY
             description: wxaibot ecoding aes key
-          - name: BKAPP_XWORK_BACKEND_API_URL
-            value: https://qyapi.weixin.qq.com/cgi-bin
-            description: BKAPP_XWORK_BACKEND_API_URL
           - name: BKAPP_CORPID
             value: BKAPP_CORPID
             description: corpid

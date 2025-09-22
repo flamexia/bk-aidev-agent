@@ -1,15 +1,11 @@
 import json
 import logging
-import os
 import time
-from functools import lru_cache
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
-
-from aidev_wxbot.api.wxbot import XworkBackendApi
 from aidev_wxbot.context import Context, Message
 from aidev_wxbot.context.message import MsgType
+from pydantic import BaseModel, ConfigDict, Field
 
 logger = logging.getLogger(__name__)
 
@@ -31,11 +27,6 @@ class LlmChunkMsg(BaseModel):
     docs: list[dict] = Field(default_factory=list)
     content: str = Field(default_factory=str)
     stream_id: str = Field(default_factory=str)
-
-    @property
-    def cache_file_path(self):
-        cwd = os.getcwd()
-        return os.path.join(cwd, f"llm_{self.stream_id}.cache")
 
     @property
     def docs_content(self):
@@ -127,16 +118,6 @@ class LlmChunkMsg(BaseModel):
 class WxWorkAiBotContext(Context):
     origin_dict: Any = Field(default={})
     stream_id: str = Field(default="")
-
-
-@lru_cache(maxsize=100)
-def id_to_name(rtx_id):
-    res = XworkBackendApi().get_user_info(rtx_id)
-    if not res:
-        logger.error(Exception(f"转换失败 {res}"))
-        return rtx_id
-    rtx_name = res["name"]
-    return rtx_name
 
 
 class ContextGenerator:
