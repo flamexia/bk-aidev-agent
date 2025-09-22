@@ -46,7 +46,6 @@ urlpatterns = [
     re_path(r"^403/$", IndexView.as_view(), name="index"),
 ]
 
-
 if settings.ENVIRONMENT == "dev":
     from bk_plugin_framework.services.debug_panel.views import debug_panel
 

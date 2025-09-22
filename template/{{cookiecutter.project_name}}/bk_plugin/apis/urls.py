@@ -6,6 +6,10 @@
 2. 前辍：/plugin_api/
 """
 
-from django.urls import include, path
+from aidev_wxbot.wxaibot.redirect import to_wxbot_callback_path
+from django.urls import include, path, re_path
 
-urlpatterns = (path("", include("agent.urls")),)
+urlpatterns = (
+    path("", include("agent.urls")),
+    re_path(r"^wxbot_callback/?$", to_wxbot_callback_path),
+)
