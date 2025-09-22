@@ -19,6 +19,7 @@ RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", 5672))
 RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
 RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD", "guest")
 RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST", "/")
+RUN_VER = "ieod" if os.getenv("BKPAAS_ENGINE_REGION", "default") == "ieod" else "open"
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
