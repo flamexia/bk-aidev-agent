@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import threading
 from contextlib import contextmanager
 from functools import wraps
@@ -8,6 +7,7 @@ from queue import Empty, Queue
 from typing import Any, Callable, Dict, Optional
 
 import pika
+from django.conf import settings
 from pika.exceptions import ChannelClosedByBroker
 
 logger = logging.getLogger(__name__)
@@ -113,11 +113,11 @@ class RabbitMQClient:
 
     def __init__(self, max_connections=10):
         """初始化RabbitMQ客户端"""
-        self.host = os.getenv("RABBITMQ_HOST", "localhost")
-        self.port = int(os.getenv("RABBITMQ_PORT", 5672))
-        self.username = os.getenv("RABBITMQ_USER", "guest")
-        self.password = os.getenv("RABBITMQ_PASSWORD", "guest")
-        self.vhost = os.getenv("RABBITMQ_VHOST", "/")
+        self.host = settings.RABBITMQ_HOST
+        self.port = settings.RABBITMQ_PORT
+        self.username = settings.RABBITMQ_USER
+        self.password = settings.RABBITMQ_PASSWORD
+        self.vhost = settings.RABBITMQ_VHOST
 
         # 初始化连接池
         self.connection_pool = ConnectionPool(max_connections)

@@ -11,8 +11,14 @@ BKPAAS_APP_CODE = os.getenv("BKPAAS_APP_CODE")
 BKPAAS_ENVIRONMENT = os.getenv("BKPAAS_ENVIRONMENT")
 WXAIBOT_TOKEN = os.getenv("BKAPP_WXAIBOT_TOKEN")
 WXAIBOT_ENCODING_AES_KEY = os.getenv("BKAPP_WXAIBOT_ENCODING_AES_KEY")
+WAXIBOT_NAME = os.getenv("BKAPP_WAXIBOT_NAME", "")
 CORPID = os.getenv("BKAPP_CORPID")
 CORPSECRET = os.getenv("BKAPP_CORPSECRET")
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "localhost")
+RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", 5672))
+RABBITMQ_USER = os.getenv("RABBITMQ_USER", "guest")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD", "guest")
+RABBITMQ_VHOST = os.getenv("RABBITMQ_VHOST", "/")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,11 +43,10 @@ INSTALLED_APPS = [
 # Django REST Framework 配置
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [],  # 禁用默认认证
-    'DEFAULT_PERMISSION_CLASSES': [],      # 禁用默认权限检查
-    'UNAUTHENTICATED_USER': None,          # 设置未认证用户为None
-    'UNAUTHENTICATED_TOKEN': None,         # 设置未认证token为None
+    'DEFAULT_PERMISSION_CLASSES': [],  # 禁用默认权限检查
+    'UNAUTHENTICATED_USER': None,  # 设置未认证用户为None
+    'UNAUTHENTICATED_TOKEN': None,  # 设置未认证token为None
 }
-
 
 MIDDLEWARE = [
     'aidev_wxbot.utils.exception.ExceptionHandlerMiddleware',
@@ -53,7 +58,6 @@ IS_INDEPENDENT_BOT = os.getenv("IS_INDEPENDENT_BOT", "false").lower() == 'true'
 ROOT_URLCONF = 'aidev_wxbot.urls'
 
 WSGI_APPLICATION = 'aidev_wxbot.wsgi.application'
-
 
 LOGGING = {
     'version': 1,

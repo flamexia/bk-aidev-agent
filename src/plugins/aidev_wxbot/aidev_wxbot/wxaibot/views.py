@@ -3,7 +3,6 @@ Django REST Framework implementation for aidev_wxbot.
 """
 
 import json
-import os
 import threading
 import time
 import uuid
@@ -83,7 +82,7 @@ class WxAiBotViewSet(ViewSet):
     def _reply_text(self, payload: dict) -> dict:
         """处理文本消息"""
         content = payload["text"]["content"]
-        rtx_name = os.getenv("RTX_NAME")
+        rtx_name = settings.WAXIBOT_NAME
         if content.startswith(f"@{rtx_name}"):
             content = content[len(f"@{rtx_name}") :].strip()
 

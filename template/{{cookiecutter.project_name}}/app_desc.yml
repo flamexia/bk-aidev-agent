@@ -54,6 +54,9 @@ modules:
           - name: BKAPP_CORPSECRET
             value: BKAPP_CORPSECRET
             description: corpsecret
+          - name: BKAPP_WAXIBOT_NAME
+            value: BKAPP_WAXIBOT_NAME
+            description: wxaibot name
           {% if cookiecutter.llm_gateway_url -%}
           - name: LLM_GW_ENDPOINT
             value: "{{cookiecutter.llm_gateway_url}}"
