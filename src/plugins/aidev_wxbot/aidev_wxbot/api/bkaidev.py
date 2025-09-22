@@ -11,6 +11,11 @@ class BkAiDevApi:
             f"openapi/aidev/resource/v1/agent_channel/configs/?channel_type={channel_type}/", "GET"
         )
 
+    def convert_to_rtx(self, sender_code):
+        return self.api.call_action(
+            f"openapi/aidev/resource/v1/agent_channel/to_rtx/?sender_code={sender_code}/", "GET"
+        )
+
 
 class AgentBackend:
     def __init__(self):

@@ -3,6 +3,7 @@ import logging
 import time
 from typing import Any
 
+from aidev_wxbot.api.bkaidev import BkAiDevApi
 from aidev_wxbot.context import Context, Message
 from aidev_wxbot.context.message import MsgType
 from pydantic import BaseModel, ConfigDict, Field
@@ -134,7 +135,7 @@ class ContextGenerator:
     def generate(self) -> WxWorkAiBotContext:
         logger.info(f"企微传递的参数是 {json.dumps(self.payload, ensure_ascii=False)}")
         sender_code = self.payload.get("from", {}).get("userid")
-        sender_id = sender_code
+        sender_id = BkAiDevApi().convert_to_rtx(sender_code)
         from_type = self.payload.get("chattype")
         chat_id = self.payload.get("chatid")
         ctx_data = {

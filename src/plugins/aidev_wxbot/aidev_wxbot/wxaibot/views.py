@@ -34,10 +34,10 @@ class WxAiBotViewSet(ViewSet):
 
     @property
     def wxbot_config(self):
-        try:
-            return BkAiDevApi().retrieve_agent_channel_configs("rtx")["data"]["config"]
-        except Exception:
+        if settings.WXAIBOT_TOKEN and settings.WXAIBOT_ENCODING_AES_KEY:
             return {"rtx_token": settings.WXAIBOT_TOKEN, "rtx_encoding_aes_key": settings.WXAIBOT_ENCODING_AES_KEY}
+        else:
+            return BkAiDevApi().retrieve_agent_channel_configs("rtx")["data"]["config"]
 
     def _reply_wxaibot(self, payload: dict) -> dict:
         """处理微信AI机器人的回复逻辑"""

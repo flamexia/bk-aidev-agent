@@ -15,7 +15,7 @@ This plugin provides WeChat bot functionality for the bkaidev platform, enabling
 ## Installation
 
 ```bash
-pip install aidev-wxbot-plugin
+pip install aidev_wxbot
 ```
 
 ## Usage

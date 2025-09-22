@@ -48,12 +48,6 @@ modules:
           - name: BKAPP_WXAIBOT_ENCODING_AES_KEY
             value: BKAPP_WXAIBOT_ENCODING_AES_KEY
             description: wxaibot ecoding aes key
-          - name: BKAPP_CORPID
-            value: BKAPP_CORPID
-            description: corpid
-          - name: BKAPP_CORPSECRET
-            value: BKAPP_CORPSECRET
-            description: corpsecret
           - name: BKAPP_WAXIBOT_NAME
             value: BKAPP_WAXIBOT_NAME
             description: wxaibot name
