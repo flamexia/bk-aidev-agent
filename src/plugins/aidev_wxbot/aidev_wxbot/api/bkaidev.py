@@ -11,10 +11,8 @@ class BkAiDevApi:
             f"openapi/aidev/resource/v1/agent_channel/configs/?channel_type={channel_type}/", "GET"
         )
 
-    def convert_to_rtx(self, sender_code):
-        return self.api.call_action(
-            f"openapi/aidev/resource/v1/agent_channel/to_rtx/?sender_code={sender_code}/", "GET"
-        )
+    def convert_to_rtx(self, open_id):
+        return self.api.call_action("/resource/v1/qyweixin/convert_to_userid/", "POST", json={"open_id": open_id})
 
 
 class AgentBackend:
