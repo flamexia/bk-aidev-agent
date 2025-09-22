@@ -1,11 +1,10 @@
-from django.conf import settings
-
 from aidev_wxbot.api import Api
+from django.conf import settings
 
 
 class XworkBackendApi:
     def __init__(self):
-        self.api = Api(settings.XWORK_BACKEND_API_NAME)
+        self.api = Api(settings.XWORK_BACKEND_API_URL)
 
     @property
     def access_token(self):
