@@ -43,10 +43,10 @@ modules:
             value: "True"
             description: set django allow unsafe async
           - name: BKAPP_WXAIBOT_TOKEN
-            value: BKAPP_WXAIBOT_TOKEN
+            value: "{{ cookiecutter.bkapp_wxaibot_token }}"
             description: wxaibot token
           - name: BKAPP_WXAIBOT_ENCODING_AES_KEY
-            value: BKAPP_WXAIBOT_ENCODING_AES_KEY
+            value: "{{ cookiecutter.bkapp_wxaibot_encoding_aes_key }}"
             description: wxaibot ecoding aes key
           - name: BKAPP_WAXIBOT_NAME
             value: BKAPP_WAXIBOT_NAME
