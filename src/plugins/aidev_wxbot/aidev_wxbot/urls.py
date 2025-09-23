@@ -9,8 +9,6 @@ Include these URLs in your main project's urlpatterns:
 
 from django.urls import include, path
 
-app_name = "aidev_wxbot"
-
 urlpatterns = [
     path("", include("aidev_wxbot.wxaibot.urls")),
 ]
