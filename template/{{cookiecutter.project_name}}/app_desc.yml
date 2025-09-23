@@ -97,7 +97,7 @@ modules:
               targetPort: 5000
               port: 80
         - name: wxbot
-          procCommand: python aidev_wxbot/manage.py runserver 0.0.0.0:5000
+          procCommand: aidev_wxbot.manage runserver 0.0.0.0:5000
           services:
             - name: wxbot
               protocol: TCP
