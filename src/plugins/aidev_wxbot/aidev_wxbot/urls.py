@@ -1,7 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Main URL routing for aidev_wxbot.
+URL routing for aidev_wxbot Django app.
+
+Include these URLs in your main project's urlpatterns:
+    path('wxbot/', include('aidev_wxbot.urls')),
 """
 
 from django.urls import include, path
 
-urlpatterns = [path("", include("aidev_wxbot.wxaibot.urls"))]
+app_name = "aidev_wxbot"
+
+urlpatterns = [
+    path("", include("aidev_wxbot.wxaibot.urls")),
+]
