@@ -42,15 +42,6 @@ modules:
           - name: DJANGO_ALLOW_ASYNC_UNSAFE
             value: "True"
             description: set django allow unsafe async
-          - name: BKAPP_WXAIBOT_TOKEN
-            value: "{{ cookiecutter.bkapp_wxaibot_token }}"
-            description: wxaibot token
-          - name: BKAPP_WXAIBOT_ENCODING_AES_KEY
-            value: "{{ cookiecutter.bkapp_wxaibot_encoding_aes_key }}"
-            description: wxaibot ecoding aes key
-          - name: BKAPP_WAXIBOT_NAME
-            value: BKAPP_WAXIBOT_NAME
-            description: wxaibot name
           {% if cookiecutter.llm_gateway_url -%}
           - name: LLM_GW_ENDPOINT
             value: "{{cookiecutter.llm_gateway_url}}"
