@@ -42,15 +42,6 @@ modules:
           - name: DJANGO_ALLOW_ASYNC_UNSAFE
             value: "True"
             description: set django allow unsafe async
-          - name: BKAPP_WXAIBOT_TOKEN
-            value: BKAPP_WXAIBOT_TOKEN
-            description: wxaibot token
-          - name: BKAPP_WXAIBOT_ENCODING_AES_KEY
-            value: BKAPP_WXAIBOT_ENCODING_AES_KEY
-            description: wxaibot ecoding aes key
-          - name: BKAPP_WAXIBOT_NAME
-            value: BKAPP_WAXIBOT_NAME
-            description: wxaibot name
           {% if cookiecutter.llm_gateway_url -%}
           - name: LLM_GW_ENDPOINT
             value: "{{cookiecutter.llm_gateway_url}}"
@@ -94,12 +85,5 @@ modules:
               protocol: TCP
               exposedType:
                 name: bk/http
-              targetPort: 5000
-              port: 80
-        - name: wxbot
-          procCommand: python aidev_wxbot/manage.py runserver 0.0.0.0:5000
-          services:
-            - name: wxbot
-              protocol: TCP
               targetPort: 5000
               port: 80

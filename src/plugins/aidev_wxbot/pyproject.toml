@@ -1,7 +1,7 @@
 [project]
 name = "aidev-wxbot"
-version = "0.1.2"
-description = "bkaidev wxbot plugin"
+version = "0.1.6"
+description = "A Django app for WeChat AI bot integration with BK AI Dev platform"
 authors = [
     {name = "tencentblueking"}
 ]
@@ -18,6 +18,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
+    "django>=4.0,<5.0",
+    "djangorestframework>=3.14.0",
     "pydantic>=2.11.7",
     "stackprinter>=0.2.12",
     "pycryptodome>=3.23.0",
@@ -26,8 +28,7 @@ dependencies = [
     "blueapps[opentelemetry]>=4.15.1,<5.0",
 ]
 
-[project.scripts]
-"aidev_wxbot.manage" = "aidev_wxbot.manage:main"
+# No scripts needed for Django app
 
 
 [build-system]

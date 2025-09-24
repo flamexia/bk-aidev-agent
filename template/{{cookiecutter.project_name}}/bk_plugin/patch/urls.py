@@ -10,6 +10,7 @@ an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express o
 specific language governing permissions and limitations under the License.
 """
 
+from aidev_wxbot.wxaibot.views import WxAiBotViewSet
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, re_path
@@ -44,6 +45,9 @@ urlpatterns = [
     re_path(r"^page/$", IndexView.as_view(), name="index"),
     re_path(r"^side-slider/$", IndexView.as_view(), name="index"),
     re_path(r"^403/$", IndexView.as_view(), name="index"),
+    re_path(
+        r"^wxbot_callback/?$", WxAiBotViewSet.as_view({"get": "callback", "post": "callback"}), name="wxbot_callback"
+    ),
 ]
 
 if settings.ENVIRONMENT == "dev":
