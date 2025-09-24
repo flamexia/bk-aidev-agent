@@ -1,14 +1,16 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-URL routing for aidev_wxbot Django app.
-
-Include these URLs in your main project's urlpatterns:
-    path('wxbot/', include('aidev_wxbot.urls')),
+URL routing for aidev_wxbot using DRF ViewSets.
 """
 
 from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
+from aidev_wxbot.wxaibot.views import WxAiBotViewSet
+
+router = DefaultRouter(trailing_slash=False)
+router.register(r"", WxAiBotViewSet, basename="wxaibot")
 
 urlpatterns = [
-    path("", include("aidev_wxbot.wxaibot.urls")),
+    # DRF ViewSet路由
+    path("", include(router.urls)),
 ]
