@@ -42,7 +42,12 @@ class WxAiBotViewSet(ViewSet):
         if settings.WXAIBOT_TOKEN and settings.WXAIBOT_ENCODING_AES_KEY:
             return {"rtx_token": settings.WXAIBOT_TOKEN, "rtx_encoding_aes_key": settings.WXAIBOT_ENCODING_AES_KEY}
         else:
-            return BkAiDevApi().retrieve_agent_channel_configs("rtx")["data"]["config"]
+            config = [
+                item
+                for item in BkAiDevApi().retrieve_agent_channel_configs("rtx")["data"]
+                if item["channel_type"] == "rtx"
+            ][0]
+            return config["config"]
 
     def _reply_wxaibot(self, payload: dict) -> dict:
         """处理微信AI机器人的回复逻辑"""
