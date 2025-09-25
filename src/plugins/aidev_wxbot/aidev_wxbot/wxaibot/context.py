@@ -73,7 +73,7 @@ class LlmChunkMsg(BaseModel):
         try:
             queue_name = self.stream_id
             is_finish = False
-            stream_time = int(self.stream_id.split("_")[2])
+            stream_time = int(self.stream_id.split("_")[1])
 
             # 检查消息是否超时
             if time.time() - stream_time > 300:  # 消息时间太久
