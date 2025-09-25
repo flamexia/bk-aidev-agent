@@ -98,7 +98,7 @@ class WxAiBotViewSet(ViewSet):
         current_context = ContextGenerator(payload).generate()
         agent_apigw_name = settings.BKPAAS_BK_PLUGIN_APIGW_NAME
         # 生成流式响应ID
-        stream_id = current_context.msg_id_int(time.time())
+        stream_id = current_context.msg_id + "_" + str(int(time.time()))
 
         # 启动后台线程处理实际的AI请求
         thread = threading.Thread(
