@@ -29,7 +29,6 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-
 urlpatterns = [
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^account/", include("blueapps.account.urls")),
@@ -40,14 +39,14 @@ urlpatterns = [
         name="schema-json",
     ),
     re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    re_path(
+        r"^wxbot_callback/?$", WxAiBotViewSet.as_view({"get": "callback", "post": "callback"}), name="wxbot_callback"
+    ),
     re_path(r"^bk_plugin/", include("bk_plugin_framework.services.bpf_service.urls")),
     re_path(r"^$", IndexView.as_view(), name="index"),
     re_path(r"^page/$", IndexView.as_view(), name="index"),
     re_path(r"^side-slider/$", IndexView.as_view(), name="index"),
     re_path(r"^403/$", IndexView.as_view(), name="index"),
-    re_path(
-        r"^wxbot_callback/?$", WxAiBotViewSet.as_view({"get": "callback", "post": "callback"}), name="wxbot_callback"
-    ),
 ]
 
 if settings.ENVIRONMENT == "dev":

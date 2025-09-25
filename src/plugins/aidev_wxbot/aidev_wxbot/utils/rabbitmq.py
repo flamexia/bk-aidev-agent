@@ -211,7 +211,7 @@ class RabbitMQClient:
                 auto_delete=auto_delete,
                 arguments=arguments or {},
             )
-            logger.info(f"交换机 '{exchange_name}' 声明成功")
+            logger.debug(f"交换机 '{exchange_name}' 声明成功")
             return True
         except Exception as e:
             logger.error(f"声明交换机 '{exchange_name}' 失败: {e}")
