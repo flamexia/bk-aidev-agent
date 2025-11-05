@@ -38,9 +38,7 @@ class WxAiBotViewSet(ViewSet):
             return {"rtx_token": settings.WXAIBOT_TOKEN, "rtx_encoding_aes_key": settings.WXAIBOT_ENCODING_AES_KEY}
         else:
             config = [
-                item
-                for item in BkAiDevApi().retrieve_agent_channel_configs("rtx")["data"]
-                if item["channel_type"] == "rtx"
+                item for item in BkAiDevApi().retrieve_agent_channel_configs("rtx") if item["channel_type"] == "rtx"
             ][0]
             return config["config"]
 
