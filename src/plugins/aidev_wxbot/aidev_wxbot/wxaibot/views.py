@@ -92,6 +92,7 @@ class WxAiBotViewSet(ViewSet):
     def _reply_text(self, payload: dict) -> dict:
         """处理文本消息"""
         content = payload["text"]["content"]
+        quote_content = payload.get("quote", {}).get("text", {}).get("content", None)
         rtx_name = settings.WAXIBOT_NAME
         if content.startswith(f"@{rtx_name}"):
             content = content[len(f"@{rtx_name}") :].strip()
@@ -106,7 +107,7 @@ class WxAiBotViewSet(ViewSet):
         # 启动后台线程处理实际的AI请求
         thread = threading.Thread(
             target=self._process_ai_request_async,
-            args=(content, stream_id, agent_apigw_name, current_context.sender_id),
+            args=(content, stream_id, agent_apigw_name, current_context.sender_id, quote_content),
             daemon=True,
         )
         thread.start()
@@ -114,7 +115,9 @@ class WxAiBotViewSet(ViewSet):
         # 立即返回"正在思考中...."的消息
         return stream_msg("正在思考中...", False, stream_id)
 
-    def _process_ai_request_async(self, content: str, stream_id: str, agent_apigw_name: str, username: str):
+    def _process_ai_request_async(
+        self, content: str, stream_id: str, agent_apigw_name: str, username: str, quote_content: str
+    ):
         """异步处理AI请求的后台方法"""
         try:
             start_time = time.time()
@@ -125,6 +128,33 @@ class WxAiBotViewSet(ViewSet):
                 + "prod"
                 + "/bk_plugin/openapi/agent/chat_completion/"
             )
+            input_json = {
+                "inputs": content,
+                "chat_history": [{"role": "user", "content": content}],
+                "execute_kwargs": {"stream": True, "executor": username},
+            }
+            if quote_content:
+                if quote_content.startswith("<think>\n") and "\n</think>\n\n" in quote_content:
+                    quote_content = quote_content.split("\n</think>\n\n")[-1]
+                    input_json = {
+                        "inputs": content,
+                        "chat_history": [
+                            {"role": "assistant", "content": quote_content},
+                            {"role": "user", "content": content},
+                        ],
+                        "execute_kwargs": {"stream": True, "executor": username},
+                    }
+
+                else:
+                    input_json = {
+                        "inputs": content,
+                        "chat_history": [
+                            {"role": "user", "content": quote_content},
+                            {"role": "user", "content": content},
+                        ],
+                        "execute_kwargs": {"stream": True, "executor": username},
+                    }
+
             response = requests.post(
                 chat_root,
                 headers={
@@ -134,10 +164,7 @@ class WxAiBotViewSet(ViewSet):
                     ),
                     "X-BKAIDEV-USER": username,
                 },
-                json={
-                    "input": content,
-                    "execute_kwargs": {"stream": True},
-                },
+                json=input_json,
                 stream=True,
             )
 
