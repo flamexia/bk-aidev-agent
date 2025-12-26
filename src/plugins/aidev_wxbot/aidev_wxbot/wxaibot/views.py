@@ -129,7 +129,7 @@ class WxAiBotViewSet(ViewSet):
                 + "/bk_plugin/openapi/agent/chat_completion/"
             )
             input_json = {
-                "inputs": content,
+                "input": content,
                 "chat_history": [{"role": "user", "content": content}],
                 "execute_kwargs": {"stream": True, "executor": username},
             }
@@ -137,7 +137,7 @@ class WxAiBotViewSet(ViewSet):
                 if quote_content.startswith("<think>\n") and "\n</think>\n\n" in quote_content:
                     quote_content = quote_content.split("\n</think>\n\n")[-1]
                     input_json = {
-                        "inputs": content,
+                        "input": content,
                         "chat_history": [
                             {"role": "assistant", "content": quote_content},
                             {"role": "user", "content": content},
@@ -147,7 +147,7 @@ class WxAiBotViewSet(ViewSet):
 
                 else:
                     input_json = {
-                        "inputs": content,
+                        "input": content,
                         "chat_history": [
                             {"role": "user", "content": quote_content},
                             {"role": "user", "content": content},
