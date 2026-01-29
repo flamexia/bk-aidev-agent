@@ -170,29 +170,16 @@ class WxAiBotViewSet(ViewSet):
             headers = {
                 "Content-Type": "application/json",
                 "X-Bkapi-Authorization": json.dumps(
-                    {
-                        "bk_app_code": settings.SG_BKPAAS_APP_CODE if settings.IF_SG else settings.BKPAAS_APP_CODE,
-                        "bk_app_secret": settings.SG_BKPAAS_APP_SECRET
-                        if settings.IF_SG
-                        else settings.BKPAAS_APP_SECRET,
-                    },
+                    {"bk_app_code": settings.BKPAAS_APP_CODE, "bk_app_secret": settings.BKPAAS_APP_SECRET},
                 ),
                 "X-BKAIDEV-USER": username,
             }
-            if settings.IF_SG:
-                chat_root = (
-                    f"https://bkapi.sg.crosgame.com/api/{agent_apigw_name}"
-                    + "/"
-                    + "prod"
-                    + "/bk_plugin/openapi/agent/chat_completion/"
-                )
-            else:
-                chat_root = (
-                    settings.BK_APIGW_MANAGER_URL_TMPL.format(api_name=agent_apigw_name)
-                    + "/"
-                    + "prod"
-                    + "/bk_plugin/openapi/agent/chat_completion/"
-                )
+            chat_root = (
+                settings.BK_API_URL_TMPL.format(api_name=agent_apigw_name)
+                + "/"
+                + "prod"
+                + "/bk_plugin/openapi/agent/chat_completion/"
+            )
             logger.info(f"querying {chat_root}")
             input_json = {
                 "input": content,
