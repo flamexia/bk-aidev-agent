@@ -11,6 +11,7 @@ from logging import getLogger
 import requests
 from django.conf import settings
 from django.http import HttpResponse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -19,6 +20,7 @@ from rest_framework.viewsets import ViewSet
 
 from .context import ContextGenerator, LlmChunkMsg, stream_msg
 from .decryption import WXBizJsonMsgCrypt
+from .models import AgentSession
 from ..api.bkaidev import BkAiDevApi
 from ..utils.rabbitmq import rabbitmq_client
 
@@ -89,10 +91,45 @@ class WxAiBotViewSet(ViewSet):
         """处理事件消息"""
         return stream_msg("", True, uuid.uuid4().hex)
 
+    def _get_or_create_thread_id(self, group_id: str) -> int:
+        """
+        获取或创建thread_id
+
+        Args:
+            group_id: 群组ID
+
+        Returns:
+            int: thread_id
+        """
+        try:
+            # 尝试获取现有会话
+            agent_session = AgentSession.objects.get(group_id=group_id)
+
+            # 检查会话是否有效（30分钟内）
+            if agent_session.is_session_valid(timeout_minutes=30):
+                logger.info(f"group_id:{group_id} 使用现有会话 thread_id:{agent_session.thread_id}")
+                # 更新最后会话时间
+                agent_session.update_session()
+                return agent_session.thread_id
+            else:
+                # 会话已过期，生成新的thread_id
+                new_thread_id = int(time.time())
+                agent_session.update_session(thread_id=new_thread_id)
+                logger.info(f"group_id:{group_id} 会话已过期，生成新的 thread_id:{new_thread_id}")
+                return new_thread_id
+
+        except AgentSession.DoesNotExist:
+            # 创建新会话
+            new_thread_id = int(time.time())
+            AgentSession.objects.create(group_id=group_id, thread_id=new_thread_id, last_session_time=timezone.now())
+            logger.info(f"group_id:{group_id} 创建新会话 thread_id:{new_thread_id}")
+            return new_thread_id
+
     def _reply_text(self, payload: dict) -> dict:
         """处理文本消息"""
         content = payload["text"]["content"]
         rtx_name = settings.WAXIBOT_NAME
+        quote_content = payload.get("quote", {}).get("text", {}).get("content", None)
         if content.startswith(f"@{rtx_name}"):
             content = content[len(f"@{rtx_name}") :].strip()
 
@@ -106,7 +143,14 @@ class WxAiBotViewSet(ViewSet):
         # 启动后台线程处理实际的AI请求
         thread = threading.Thread(
             target=self._process_ai_request_async,
-            args=(content, stream_id, agent_apigw_name, current_context.sender_id),
+            args=(
+                content,
+                stream_id,
+                agent_apigw_name,
+                current_context.sender_id,
+                quote_content,
+                current_context.group_id,
+            ),
             daemon=True,
         )
         thread.start()
@@ -114,30 +158,65 @@ class WxAiBotViewSet(ViewSet):
         # 立即返回"正在思考中...."的消息
         return stream_msg("正在思考中...", False, stream_id)
 
-    def _process_ai_request_async(self, content: str, stream_id: str, agent_apigw_name: str, username: str):
+    def _process_ai_request_async(
+        self, content: str, stream_id: str, agent_apigw_name: str, username: str, quote_content: str, group_id: str
+    ):
         """异步处理AI请求的后台方法"""
         try:
             start_time = time.time()
+            # 获取或创建会话，管理thread_id
+            thread_id = self._get_or_create_thread_id(group_id)
             first_response_time = None
-            chat_root = (
-                settings.BK_API_URL_TMPL.format(api_name=agent_apigw_name)
-                + "/"
-                + "prod"
-                + "/bk_plugin/openapi/agent/chat_completion/"
-            )
+            headers = {
+                "Content-Type": "application/json",
+                "X-Bkapi-Authorization": json.dumps(
+                    {
+                        "bk_app_code": settings.SG_BKPAAS_APP_CODE if settings.IF_SG else settings.BKPAAS_APP_CODE,
+                        "bk_app_secret": settings.SG_BKPAAS_APP_SECRET
+                        if settings.IF_SG
+                        else settings.BKPAAS_APP_SECRET,
+                    },
+                ),
+                "X-BKAIDEV-USER": username,
+            }
+            if settings.IF_SG:
+                chat_root = (
+                    f"https://bkapi.sg.crosgame.com/api/{agent_apigw_name}"
+                    + "/"
+                    + "prod"
+                    + "/bk_plugin/openapi/agent/chat_completion/"
+                )
+            else:
+                chat_root = (
+                    settings.BK_APIGW_MANAGER_URL_TMPL.format(api_name=agent_apigw_name)
+                    + "/"
+                    + "prod"
+                    + "/bk_plugin/openapi/agent/chat_completion/"
+                )
+            logger.info(f"querying {chat_root}")
+            input_json = {
+                "input": content,
+                "chat_history": [{"role": "user", "content": content}],
+                "execute_kwargs": {"stream": True, "thread_id": thread_id, "executor": username, "group_id": group_id},
+            }
+            if quote_content:
+                if quote_content.startswith("<think>\n") and "\n</think>\n\n" in quote_content:
+                    quote_content = quote_content.split("\n</think>\n\n")[-1]
+                    input_json["chat_history"] = [
+                        {"role": "assistant", "content": quote_content},
+                        {"role": "user", "content": content},
+                    ]
+
+                else:
+                    input_json["chat_history"] = [
+                        {"role": "user", "content": quote_content},
+                        {"role": "user", "content": content},
+                    ]
+
             response = requests.post(
                 chat_root,
-                headers={
-                    "Content-Type": "application/json",
-                    "X-Bkapi-Authorization": json.dumps(
-                        {"bk_app_code": settings.BKPAAS_APP_CODE, "bk_app_secret": settings.BKPAAS_APP_SECRET}
-                    ),
-                    "X-BKAIDEV-USER": username,
-                },
-                json={
-                    "input": content,
-                    "execute_kwargs": {"stream": True},
-                },
+                headers=headers,
+                json=input_json,
                 stream=True,
             )
 
@@ -176,6 +255,7 @@ class WxAiBotViewSet(ViewSet):
                                     elapsed_time = first_response_time - start_time
                                     logger.info(
                                         f"stream_id:{stream_id} 从请求开始到第一次收到流式响应耗时: {elapsed_time:.3f} 秒"
+                                        f"第一段消息 {chunk_json}"
                                     )
 
                                 event_type = chunk_json.get("event", "")
@@ -211,6 +291,14 @@ class WxAiBotViewSet(ViewSet):
                                         think_content = ""
                                 else:
                                     logger.info(f"stream_id:{stream_id} 未知的事件类型: {event_type}")
+                                    if event_type == "error":
+                                        error_chunk = LlmChunkMsg(
+                                            content=f"处理请求时发生错误: {chunk_json.get('message', chunk_json)}",
+                                            is_finish=True,
+                                            stream_id=stream_id,
+                                        )
+                                        error_chunk.append_to_cache(rabbitmq_client)
+                                        return
                     except Exception as e:
                         logger.error(f"stream_id:{stream_id} 处理 chunk 时发生错误: {e}")
 
