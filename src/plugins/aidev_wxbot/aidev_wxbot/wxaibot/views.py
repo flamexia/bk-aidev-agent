@@ -91,7 +91,7 @@ class WxAiBotViewSet(ViewSet):
         """处理事件消息"""
         return stream_msg("", True, uuid.uuid4().hex)
 
-    def _get_or_create_thread_id(self, group_id: str) -> int:
+    def _get_or_create_thread_id(self, group_id: str) -> str:
         """
         获取或创建thread_id
 
@@ -99,7 +99,7 @@ class WxAiBotViewSet(ViewSet):
             group_id: 群组ID
 
         Returns:
-            int: thread_id
+            str: thread_id
         """
         try:
             # 尝试获取现有会话
@@ -113,14 +113,14 @@ class WxAiBotViewSet(ViewSet):
                 return agent_session.thread_id
             else:
                 # 会话已过期，生成新的thread_id
-                new_thread_id = int(time.time())
+                new_thread_id = str(int(time.time()))
                 agent_session.update_session(thread_id=new_thread_id)
                 logger.info(f"group_id:{group_id} 会话已过期，生成新的 thread_id:{new_thread_id}")
                 return new_thread_id
 
         except AgentSession.DoesNotExist:
             # 创建新会话
-            new_thread_id = int(time.time())
+            new_thread_id = str(int(time.time()))
             AgentSession.objects.create(group_id=group_id, thread_id=new_thread_id, last_session_time=timezone.now())
             logger.info(f"group_id:{group_id} 创建新会话 thread_id:{new_thread_id}")
             return new_thread_id
