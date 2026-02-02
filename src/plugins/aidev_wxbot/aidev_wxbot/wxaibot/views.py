@@ -132,11 +132,12 @@ class WxAiBotViewSet(ViewSet):
         quote_content = payload.get("quote", {}).get("text", {}).get("content", None)
         if content.startswith(f"@{rtx_name}"):
             content = content[len(f"@{rtx_name}") :].strip()
-
         current_context = ContextGenerator(payload).generate()
+        stream_id = current_context.msg_id + "_" + str(int(time.time()))
+        if content.strip() in ["会话", "新会话"]:
+            return self._new_conversation(current_context.group_id, stream_id)
         agent_apigw_name = settings.BKPAAS_BK_PLUGIN_APIGW_NAME
         # 生成流式响应ID
-        stream_id = current_context.msg_id + "_" + str(int(time.time()))
 
         logger.info(f"reply_text: current_context=>{current_context}")
 
@@ -157,6 +158,32 @@ class WxAiBotViewSet(ViewSet):
 
         # 立即返回"正在思考中...."的消息
         return stream_msg("正在思考中...", False, stream_id)
+
+    def _new_conversation(self, group_id: str, stream_id: str) -> dict:
+        """
+        创建新会话
+
+        Args:
+            group_id: 群组ID
+            stream_id: 流式响应ID
+
+        Returns:
+            dict: 返回消息
+        """
+        # 生成新的thread_id
+        new_thread_id = f"{group_id}_{int(time.time())}"
+
+        try:
+            # 尝试获取现有会话并更新
+            agent_session = AgentSession.objects.get(group_id=group_id)
+            agent_session.update_session(thread_id=new_thread_id)
+            logger.info(f"group_id:{group_id} 更新会话 thread_id:{new_thread_id}")
+        except AgentSession.DoesNotExist:
+            # 创建新会话
+            AgentSession.objects.create(group_id=group_id, thread_id=new_thread_id, last_session_time=timezone.now())
+            logger.info(f"group_id:{group_id} 创建新会话 thread_id:{new_thread_id}")
+
+        return stream_msg("已创建新会话，请输入咨询内容", True, stream_id)
 
     def _process_ai_request_async(
         self, content: str, stream_id: str, agent_apigw_name: str, username: str, quote_content: str, group_id: str
